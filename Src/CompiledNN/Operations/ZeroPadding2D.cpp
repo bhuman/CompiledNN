@@ -3,14 +3,14 @@
  * @author Bernd Poppinga
  */
 
-#include "Padding.h"
+#include "ZeroPadding2D.h"
 #include "Platform/BHAssert.h"
 
 namespace NeuralNetwork
 {
   namespace CompiledNNImpl
   {
-    void PaddingCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void ZeroPadding2DCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 3);
       ASSERT(output.rank() == 3);

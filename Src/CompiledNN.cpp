@@ -9,6 +9,7 @@
 #include "CompiledNN.h"
 #include "CompiledNN/CompiledNNImpl.h"
 #include "Model.h"
+#include "Tools/Global.h"
 #include <cstring>
 #include <numeric>
 #include <unordered_map>
@@ -95,12 +96,12 @@ namespace NeuralNetwork
       if(!verticalPadding && !horizontalPadding)
         return nullptr;
 
-      PaddingCompiler::Parameters p;
+      ZeroPadding2DCompiler::Parameters p;
       p.padding[ZeroPadding2DLayer::TOP] = verticalPadding / 2;
       p.padding[ZeroPadding2DLayer::BOTTOM] = (verticalPadding + 1) / 2;
       p.padding[ZeroPadding2DLayer::LEFT] = horizontalPadding / 2;
       p.padding[ZeroPadding2DLayer::RIGHT] = (horizontalPadding + 1) / 2;
-      return getCompiler<PaddingCompiler>(settings, p, compilers);
+      return getCompiler<ZeroPadding2DCompiler>(settings, p, compilers);
     };
 
     std::vector<OperationCompiler*> result;
@@ -207,6 +208,14 @@ namespace NeuralNetwork
         result.push_back(getCompiler<DConv2DCompiler>(settings, p, compilers));
         break;
       }
+      case LayerType::cropping2D:
+      {
+        const Cropping2DLayer& layer = *static_cast<const Cropping2DLayer*>(node.layer);
+        Cropping2DCompiler::Parameters p;
+        p.cropping = layer.cropping;
+        result.push_back(getCompiler<Cropping2DCompiler>(settings, p, compilers));
+        break;
+      }
       case LayerType::upSampling2D:
       {
         const UpSampling2DLayer& layer = *static_cast<const UpSampling2DLayer*>(node.layer);
@@ -220,9 +229,9 @@ namespace NeuralNetwork
       case LayerType::zeroPadding2D:
       {
         const ZeroPadding2DLayer& layer = *static_cast<const ZeroPadding2DLayer*>(node.layer);
-        PaddingCompiler::Parameters p;
+        ZeroPadding2DCompiler::Parameters p;
         p.padding = layer.padding;
-        result.push_back(getCompiler<PaddingCompiler>(settings, p, compilers));
+        result.push_back(getCompiler<ZeroPadding2DCompiler>(settings, p, compilers));
         break;
       }
       case LayerType::maxPooling2D:

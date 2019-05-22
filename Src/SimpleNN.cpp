@@ -303,6 +303,28 @@ namespace NeuralNetwork
               output(i) = input(i[0] / layer.size[0], i[1] / layer.size[1], i[2]);
       }
 
+      void apply(const TensorXf& input, TensorXf& output, const Cropping2DLayer& layer)
+      {
+        ASSERT(input.rank() == 3);
+        ASSERT(output.rank() == 3);
+
+        std::vector<unsigned int> iOut(3);
+        std::vector<unsigned int> iIn(3);
+
+        for(iOut[0] = 0; iOut[0] < output.dims(0); iOut[0]++)
+        {
+          iIn[0] = iOut[0] + layer.cropping[Cropping2DLayer::TOP];
+
+          for(iOut[1] = 0; iOut[1] < output.dims(1); iOut[1]++)
+          {
+            iIn[1] = iOut[1] + layer.cropping[Cropping2DLayer::LEFT];
+
+            for(iIn[2] = iOut[2] = 0; iOut[2] < output.dims(2); iIn[2]++, iOut[2]++)
+              output(iOut) = input(iIn);
+          }
+        }
+      }
+
       void apply(const TensorXf& input, TensorXf& output, const ZeroPadding2DLayer& layer)
       {
         ASSERT(input.rank() == 3);
@@ -680,6 +702,11 @@ namespace NeuralNetwork
           ASSERT(input.size() == 1);
           ASSERT(output.size() == 1);
           Impl::apply(*input[0], *output[0], *static_cast<const DepthwiseConv2DLayer*>(node.layer));
+          break;
+        case LayerType::cropping2D:
+          ASSERT(input.size() == 1);
+          ASSERT(output.size() == 1);
+          Impl::apply(*input[0], *output[0], *static_cast<const Cropping2DLayer*>(node.layer));
           break;
         case LayerType::upSampling2D:
           ASSERT(input.size() == 1);

@@ -105,6 +105,15 @@ namespace NeuralNetwork
                                       node.inputDimensions[0][2] * weights.dims(3)}});
   }
 
+  void Cropping2DLayer::calcOutputDimensions(Node& node) const
+  {
+    ASSERT(node.inputDimensions.size() == 1);
+    ASSERT(node.inputDimensions[0].size() == 3);
+    node.outputDimensions = node.inputDimensions;
+    node.outputDimensions[0][0] -= cropping[TOP] + cropping[BOTTOM];
+    node.outputDimensions[0][1] -= cropping[LEFT] + cropping[RIGHT];
+  }
+
   void UpSampling2DLayer::calcOutputDimensions(Node& node) const
   {
     ASSERT(node.inputDimensions.size() == 1);
@@ -646,6 +655,31 @@ namespace NeuralNetwork
     return layer;
   }
 
+  std::unique_ptr<Layer> parseCropping2DLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType&)
+  {
+    const SimpleMap::Array* cropping = getRecordEntry<SimpleMap::Array>(config, "cropping");
+    const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
+
+    if(dataFormat != "channels_last")
+      FAIL("Data formats other than channels last are not supported.");
+    ASSERT(cropping->size() == 2);
+    const SimpleMap::Array* heightCropping = getArrayEntry<SimpleMap::Array>(cropping, 0);
+    ASSERT(heightCropping->size() == 2);
+    const SimpleMap::Array* widthCropping = getArrayEntry<SimpleMap::Array>(cropping, 1);
+    ASSERT(widthCropping->size() == 2);
+    const unsigned int topCropping = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(heightCropping, 0));
+    const unsigned int bottomCropping = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(heightCropping, 1));
+    const unsigned int leftCropping = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(widthCropping, 0));
+    const unsigned int rightCropping = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(widthCropping, 1));
+
+    std::unique_ptr<Cropping2DLayer> layer = std::make_unique<Cropping2DLayer>();
+    layer->cropping[Cropping2DLayer::TOP] = topCropping;
+    layer->cropping[Cropping2DLayer::BOTTOM] = bottomCropping;
+    layer->cropping[Cropping2DLayer::LEFT] = leftCropping;
+    layer->cropping[Cropping2DLayer::RIGHT] = rightCropping;
+    return layer;
+  }
+
   std::unique_ptr<Layer> parseUpSampling2DLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType&)
   {
     const SimpleMap::Array* size = getRecordEntry<SimpleMap::Array>(config, "size");
@@ -678,7 +712,7 @@ namespace NeuralNetwork
     const SimpleMap::Array* heightPadding = getArrayEntry<SimpleMap::Array>(padding, 0);
     ASSERT(heightPadding->size() == 2);
     const SimpleMap::Array* widthPadding = getArrayEntry<SimpleMap::Array>(padding, 1);
-    ASSERT(heightPadding->size() == 2);
+    ASSERT(widthPadding->size() == 2);
     const unsigned int topPadding = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(heightPadding, 0));
     const unsigned int bottomPadding = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(heightPadding, 1));
     const unsigned int leftPadding = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(widthPadding, 0));
@@ -927,6 +961,7 @@ namespace NeuralNetwork
     layerParsers.emplace("Conv2D", &parseConv2DLayer);
     layerParsers.emplace("SeparableConv2D", &parseSeparableConv2DLayer);
     layerParsers.emplace("DepthwiseConv2D", &parseDepthwiseConv2DLayer);
+    layerParsers.emplace("Cropping2D", &parseCropping2DLayer);
     layerParsers.emplace("UpSampling2D", &parseUpSampling2DLayer);
     layerParsers.emplace("ZeroPadding2D", &parseZeroPadding2DLayer);
     // Pooling layers

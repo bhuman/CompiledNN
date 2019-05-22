@@ -36,6 +36,7 @@ namespace NeuralNetwork
     dropout,
     flatten,
     separableConv2D,
+    cropping2D,
     upSampling2D,
     averagePooling2D,
     globalMaxPooling2D,
@@ -289,6 +290,22 @@ namespace NeuralNetwork
     PaddingType padding;
 
     DepthwiseConv2DLayer() : Layer(LayerType::depthwiseConv2D) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct Cropping2DLayer : Layer
+  {
+    enum Side
+    {
+      TOP,
+      BOTTOM,
+      LEFT,
+      RIGHT,
+    };
+    std::array<unsigned int, 4> cropping;
+
+    Cropping2DLayer() : Layer(LayerType::cropping2D) {}
 
     void calcOutputDimensions(Node& node) const override;
   };

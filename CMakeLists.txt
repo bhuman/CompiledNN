@@ -16,14 +16,15 @@ add_library(CompiledNN STATIC
     Src/CompiledNN/Operations/BatchNormalization.cpp
     Src/CompiledNN/Operations/Concatenate.cpp
     Src/CompiledNN/Operations/Conv2D.cpp
+    Src/CompiledNN/Operations/Cropping2D.cpp
     Src/CompiledNN/Operations/DConv2D.cpp
     Src/CompiledNN/Operations/Dense.cpp
     Src/CompiledNN/Operations/GlobalPooling2D.cpp
-    Src/CompiledNN/Operations/Padding.cpp
     Src/CompiledNN/Operations/Pooling2D.cpp
     Src/CompiledNN/Operations/Softmax.cpp
     Src/CompiledNN/Operations/UInt8Input.cpp
     Src/CompiledNN/Operations/UpSampling2D.cpp
+    Src/CompiledNN/Operations/ZeroPadding2D.cpp
     Src/CompiledNN/Util/ExpApprox.cpp
     Src/Platform/BHAssert.cpp
     Src/Tools/Streams/InOut.cpp

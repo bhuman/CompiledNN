@@ -9,7 +9,6 @@
 #include "CompiledNN.h"
 #include "CompiledNN/CompiledNNImpl.h"
 #include "Model.h"
-#include "Tools/Global.h"
 #include <cstring>
 #include <numeric>
 #include <unordered_map>

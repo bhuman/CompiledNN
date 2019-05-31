@@ -839,6 +839,15 @@ namespace NeuralNetwork
           location(location), tensor(new TensorXf(dimensions)), refCount(refCount)
         {}
 
+        TensorPlaceholder(TensorPlaceholder&& other) :
+          location(std::move(other.location)),
+          tensor(std::move(other.tensor)),
+          refCount(std::move(other.refCount)),
+          externalMemory(std::move(other.externalMemory))
+        {
+          other.tensor = nullptr;
+        }
+
         ~TensorPlaceholder()
         {
           if(!externalMemory)
@@ -961,7 +970,7 @@ namespace NeuralNetwork
       // This function gets an existing input tensor at a specific location.
       auto lookupInputTensor = [&tensors](const TensorLocation& location) -> TensorXf*
       {
-        for(TensorPlaceholder& tp : tensors)
+        for(const TensorPlaceholder& tp : tensors)
           if(tp.refCount && location == tp.location)
             return tp.tensor;
         return nullptr;
@@ -1038,7 +1047,7 @@ namespace NeuralNetwork
       // All outputs should be computed now.
 #ifndef NDEBUG
       std::size_t numOfComputedOutputs = 0;
-      for(TensorPlaceholder& tp : tensors)
+      for(const TensorPlaceholder& tp : tensors)
       {
         bool isOutput = false;
         for(const TensorLocation& tl : modelOutputs)

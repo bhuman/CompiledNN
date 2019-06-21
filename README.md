@@ -64,7 +64,7 @@ int main()
   nn.compile(model);
   // ... fill nn.input(i) with data
   nn.apply();
-  // ... obtain the results from in nn.output(i)
+  // ... obtain the results from nn.output(i)
   return 0;
 }
 ```

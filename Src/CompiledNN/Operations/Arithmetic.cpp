@@ -19,7 +19,7 @@ namespace NeuralNetwork
       }
     }
 
-    void ArithmeticCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler,
+    void ArithmeticCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler,
                                      const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const
     {
       ASSERT(output.size() == 1);
@@ -63,17 +63,17 @@ namespace NeuralNetwork
           FAIL("Unknown operation.");
       }
 
-      std::array<X86Gp::Id, 4> availablePointerRegs = {X86Gp::kIdSi, X86Gp::kIdAx, X86Gp::kIdBx, X86Gp::kIdDx};
+      std::array<x86::Gp::Id, 4> availablePointerRegs = {{x86::Gp::kIdSi, x86::Gp::kIdAx, x86::Gp::kIdBx, x86::Gp::kIdDx}};
 
       std::size_t remainingInputs = input.size();
       std::size_t inputIndex = 0;
       while(remainingInputs)
       {
-        std::vector<X86Gp::Id> regs;
-        a.mov(a.zdi(), imm_ptr<>(output[0].data()));
+        std::vector<x86::Gp::Id> regs;
+        a.mov(a.zdi(), imm(output[0].data()));
         if(!(remainingInputs == input.size() && inplaceIndex == std::numeric_limits<std::size_t>::max()))
         {
-          regs.push_back(X86Gp::kIdDi);
+          regs.push_back(x86::Gp::kIdDi);
           if(remainingInputs == input.size())
             --remainingInputs;
         }
@@ -82,7 +82,7 @@ namespace NeuralNetwork
           regs.push_back(availablePointerRegs[i]);
           if(inputIndex == inplaceIndex)
             ++inputIndex;
-          a.mov(a.gpzRef(regs.back()), imm_ptr<>(input[inputIndex++].data()));
+          a.mov(a.gpz(regs.back()), imm(input[inputIndex++].data()));
         }
 
         remainingInputs -= std::min(availablePointerRegs.size(), remainingInputs);
@@ -105,7 +105,7 @@ namespace NeuralNetwork
           if(remainingChannels >= channelsPerStep * 2)
           {
             loop = a.newLabel();
-            a.mov(a.zcx(), imm_u(remainingChannels / channelsPerStep));
+            a.mov(a.zcx(), imm(remainingChannels / channelsPerStep));
             a.bind(loop);
           }
 
@@ -140,9 +140,9 @@ namespace NeuralNetwork
           if(remainingChannels != channelsPerStep)
           {
             for(std::size_t i = 0; i < regs.size(); ++i)
-              a.add(a.gpzRef(regs[i]), imm_u(stepSize * 4 * sizeof(float)));
-            if(regs[0] != X86Gp::kIdDi)
-              a.add(a.zdi(), imm_u(stepSize * 4 * sizeof(float)));
+              a.add(a.gpz(regs[i]), imm(stepSize * 4 * sizeof(float)));
+            if(regs[0] != x86::Gp::kIdDi)
+              a.add(a.zdi(), imm(stepSize * 4 * sizeof(float)));
           }
 
           if(remainingChannels >= channelsPerStep * 2)

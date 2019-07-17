@@ -49,10 +49,10 @@ namespace NeuralNetwork
       }
     }
 
-    void UInt8InputCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void UInt8InputCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
-      a.mov(a.zsi(), imm_ptr<const float*>(input.data()));
-      a.mov(a.zdi(), imm_ptr<const float*>(output.data()));
+      a.mov(a.zsi(), imm(input.data()));
+      a.mov(a.zdi(), imm(output.data()));
 
       if(!p.batchNormalization || paramLength == 4)
       {
@@ -65,7 +65,7 @@ namespace NeuralNetwork
           a.movaps(x86::xmm6, x86::ptr(constants[0].label, paramLength * sizeof(float)));
         }
 
-        a.mov(a.zcx(), imm_u(static_cast<unsigned int>(output.size() / 16)));
+        a.mov(a.zcx(), imm(static_cast<unsigned int>(output.size() / 16)));
         Label loop = a.newLabel();
         a.bind(loop);
         a.movdqa(x86::xmm0, a.ptr_zsi());
@@ -89,8 +89,8 @@ namespace NeuralNetwork
         }
         for(unsigned int i = 0; i < 4; i++)
           a.movaps(a.ptr_zdi(i * 4 * sizeof(float)), x86::xmm(i));
-        a.add(a.zsi(), imm_u(4 * 4));
-        a.add(a.zdi(), imm_u(4 * 4 * sizeof(float)));
+        a.add(a.zsi(), imm(4u * 4));
+        a.add(a.zdi(), imm(4 * 4 * sizeof(float)));
         a.dec(a.zcx());
         a.jnz(loop);
       }

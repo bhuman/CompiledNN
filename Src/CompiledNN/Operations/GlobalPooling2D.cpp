@@ -20,7 +20,7 @@ namespace NeuralNetwork
       }
     }
 
-    void GlobalPooling2DCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void GlobalPooling2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 3);
       ASSERT(output.rank() == 1);
@@ -40,11 +40,11 @@ namespace NeuralNetwork
       }
 
       // Load input/output base addresses
-      a.mov(a.zsi(), imm_ptr<>(input.data()));
+      a.mov(a.zsi(), imm(input.data()));
       if(input.data() == output.data())
         a.mov(a.zdi(), a.zsi());
       else
-        a.mov(a.zdi(), imm_ptr<>(output.data()));
+        a.mov(a.zdi(), imm(output.data()));
 
       if(channels <= 2) // Pooling on the sub-register level
       {
@@ -58,13 +58,13 @@ namespace NeuralNetwork
         // Load initial values
         for(unsigned int i = 0; i < channelRegs; i++)
           a.movaps(x86::xmm(i), a.ptr_zsi(i * 4 * sizeof(float)));
-        a.add(a.zsi(), imm_u(channels * sizeof(float)));
+        a.add(a.zsi(), imm(channels * sizeof(float)));
 
         // Begin loop
         Label loop;
         if(imageSize > 2)
         {
-          a.mov(a.zcx(), imm_u(imageSize));
+          a.mov(a.zcx(), imm(imageSize));
           loop = a.newLabel();
           a.bind(loop);
         }
@@ -126,7 +126,7 @@ namespace NeuralNetwork
         // End loop
         if(imageSize > 2)
         {
-          a.add(a.zsi(), imm_u(channels * sizeof(float)));
+          a.add(a.zsi(), imm(channels * sizeof(float)));
           a.dec(a.zcx());
           a.jnz(loop);
         }

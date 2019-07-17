@@ -30,7 +30,7 @@ namespace NeuralNetwork
       ArithmeticCompiler(const CompilationSettings& settings, const Parameters& p) : OperationCompiler(settings), p(p) {}
 
       void initialize() override;
-      void compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const override;
+      void compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const override;
 
       inline std::vector<std::vector<unsigned int>> calcOutputDimensions(const std::vector<std::vector<unsigned int>>& inputDimensions) const override
       {

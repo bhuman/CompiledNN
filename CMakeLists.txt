@@ -31,41 +31,56 @@ add_library(CompiledNN STATIC
     Src/Tools/Streams/InStreams.cpp
     Src/Tools/Streams/SimpleMap.cpp
 
-    3rdParty/asmjit/src/asmjit/base/arch.cpp
-    3rdParty/asmjit/src/asmjit/base/assembler.cpp
-    3rdParty/asmjit/src/asmjit/base/codebuilder.cpp
-    3rdParty/asmjit/src/asmjit/base/codecompiler.cpp
-    3rdParty/asmjit/src/asmjit/base/codeemitter.cpp
-    3rdParty/asmjit/src/asmjit/base/codeholder.cpp
-    3rdParty/asmjit/src/asmjit/base/constpool.cpp
-    3rdParty/asmjit/src/asmjit/base/cpuinfo.cpp
-    3rdParty/asmjit/src/asmjit/base/func.cpp
-    3rdParty/asmjit/src/asmjit/base/globals.cpp
-    3rdParty/asmjit/src/asmjit/base/inst.cpp
-    3rdParty/asmjit/src/asmjit/base/logging.cpp
-    3rdParty/asmjit/src/asmjit/base/operand.cpp
-    3rdParty/asmjit/src/asmjit/base/osutils.cpp
-    3rdParty/asmjit/src/asmjit/base/regalloc.cpp
-    3rdParty/asmjit/src/asmjit/base/runtime.cpp
-    3rdParty/asmjit/src/asmjit/base/string.cpp
-    3rdParty/asmjit/src/asmjit/base/utils.cpp
-    3rdParty/asmjit/src/asmjit/base/vmem.cpp
-    3rdParty/asmjit/src/asmjit/base/zone.cpp
+    3rdParty/asmjit/src/asmjit/core/arch.cpp
+    3rdParty/asmjit/src/asmjit/core/assembler.cpp
+    3rdParty/asmjit/src/asmjit/core/builder.cpp
+    3rdParty/asmjit/src/asmjit/core/callconv.cpp
+    3rdParty/asmjit/src/asmjit/core/codeholder.cpp
+    3rdParty/asmjit/src/asmjit/core/compiler.cpp
+    3rdParty/asmjit/src/asmjit/core/constpool.cpp
+    3rdParty/asmjit/src/asmjit/core/cpuinfo.cpp
+    3rdParty/asmjit/src/asmjit/core/emitter.cpp
+    3rdParty/asmjit/src/asmjit/core/func.cpp
+    3rdParty/asmjit/src/asmjit/core/globals.cpp
+    3rdParty/asmjit/src/asmjit/core/inst.cpp
+    3rdParty/asmjit/src/asmjit/core/jitallocator.cpp
+    3rdParty/asmjit/src/asmjit/core/jitruntime.cpp
+    3rdParty/asmjit/src/asmjit/core/logging.cpp
+    3rdParty/asmjit/src/asmjit/core/operand.cpp
+    3rdParty/asmjit/src/asmjit/core/osutils.cpp
+    3rdParty/asmjit/src/asmjit/core/ralocal.cpp
+    3rdParty/asmjit/src/asmjit/core/rapass.cpp
+    3rdParty/asmjit/src/asmjit/core/rastack.cpp
+    3rdParty/asmjit/src/asmjit/core/string.cpp
+    3rdParty/asmjit/src/asmjit/core/support.cpp
+    3rdParty/asmjit/src/asmjit/core/target.cpp
+    3rdParty/asmjit/src/asmjit/core/type.cpp
+    3rdParty/asmjit/src/asmjit/core/virtmem.cpp
+    3rdParty/asmjit/src/asmjit/core/zone.cpp
+    3rdParty/asmjit/src/asmjit/core/zonehash.cpp
+    3rdParty/asmjit/src/asmjit/core/zonelist.cpp
+    3rdParty/asmjit/src/asmjit/core/zonestack.cpp
+    3rdParty/asmjit/src/asmjit/core/zonetree.cpp
+    3rdParty/asmjit/src/asmjit/core/zonevector.cpp
     3rdParty/asmjit/src/asmjit/x86/x86assembler.cpp
     3rdParty/asmjit/src/asmjit/x86/x86builder.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86callconv.cpp
     3rdParty/asmjit/src/asmjit/x86/x86compiler.cpp
-    3rdParty/asmjit/src/asmjit/x86/x86inst.cpp
-    3rdParty/asmjit/src/asmjit/x86/x86instimpl.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86features.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86instapi.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86instdb.cpp
     3rdParty/asmjit/src/asmjit/x86/x86internal.cpp
     3rdParty/asmjit/src/asmjit/x86/x86logging.cpp
-    3rdParty/asmjit/src/asmjit/x86/x86operand_regs.cpp
-    3rdParty/asmjit/src/asmjit/x86/x86regalloc.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86operand.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86rapass.cpp
 )
 
 target_include_directories(CompiledNN PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Src")
 target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src")
-target_compile_definitions(CompiledNN PRIVATE ASMJIT_EMBED ASMJIT_BUILD_X86 ASMJIT_DISABLE_BUILDER ASMJIT_DISABLE_COMPILER
-    ASMJIT_DISABLE_LOGGING ASMJIT_DISABLE_TEXT ASMJIT_DISABLE_VALIDATION)
+target_compile_definitions(CompiledNN PRIVATE ASMJIT_STATIC ASMJIT_BUILD_X86 ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
+    ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_INST_API)
+    
+    
 
 find_package(HDF5 REQUIRED)
 target_link_libraries(CompiledNN PRIVATE ${HDF5_C_LIBRARIES})

@@ -21,12 +21,12 @@ namespace NeuralNetwork
       }
     }
 
-    void Pooling2DCompiler::pool(X86Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int paddingHorizontal, const unsigned int paddingVertical, const unsigned int inputWidth, const unsigned int channels) const
+    void Pooling2DCompiler::pool(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int paddingHorizontal, const unsigned int paddingVertical, const unsigned int inputWidth, const unsigned int channels) const
     {
       const bool aligned = channels % 4 == 0;
       const bool isPadded = paddingHorizontal + paddingVertical > 0;
       const unsigned int regsPerStep = aligned && !(isPadded && p.method == PoolingMethod::max) ? settings.xmmRegs() : settings.xmmRegs() - 1;
-      const X86Xmm helperReg = aligned ? x86::xmm(settings.xmmRegs() - 1) : x86::xmm(settings.xmmRegs() - 2);
+      const x86::Xmm helperReg = aligned ? x86::xmm(settings.xmmRegs() - 1) : x86::xmm(settings.xmmRegs() - 2);
 
       if(!helperRegInitialized && (channels + 3) / 4 < (aligned ? settings.xmmRegs() : settings.xmmRegs() - 1))
       {
@@ -156,10 +156,10 @@ namespace NeuralNetwork
         }
       }
 
-      a.add(a.zdi(), imm_u(channels * sizeof(float)));
+      a.add(a.zdi(), imm(channels * sizeof(float)));
     }
 
-    unsigned int Pooling2DCompiler::poolRow(X86Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int paddingLeft, const unsigned int paddingVertical, const unsigned int inputWidth, const unsigned int outputWidth, const unsigned int channels) const
+    unsigned int Pooling2DCompiler::poolRow(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int paddingLeft, const unsigned int paddingVertical, const unsigned int inputWidth, const unsigned int outputWidth, const unsigned int channels) const
     {
       unsigned int offset = 0;
 
@@ -173,7 +173,7 @@ namespace NeuralNetwork
       if(inputCol > paddingLeft)
       {
         offset = (inputCol - paddingLeft) * channels * sizeof(float);
-        a.add(a.zsi(), imm_u(offset));
+        a.add(a.zsi(), imm(offset));
       }
 
       // Calculate number of non-padded cols
@@ -181,7 +181,7 @@ namespace NeuralNetwork
       for(; inputCol < paddingLeft + inputWidth - p.kernelSize[1] + 1; inputCol += p.strides[1], outputCol++, nonPaddedCols++);
 
       // Begin loop over image cols
-      a.mov(a.zcx(), imm_u(nonPaddedCols));
+      a.mov(a.zcx(), imm(nonPaddedCols));
       Label inputColLoop = a.newLabel();
       a.bind(inputColLoop);
 
@@ -189,7 +189,7 @@ namespace NeuralNetwork
       pool(a, afHandler, 0, paddingVertical, inputWidth, channels);
 
       // Set input offset to next column, respecting the stride
-      a.add(a.zsi(), imm_u(p.strides[1] * channels * sizeof(float)));
+      a.add(a.zsi(), imm(p.strides[1] * channels * sizeof(float)));
 
       // End loop over image cols
       a.dec(a.zcx());
@@ -204,14 +204,14 @@ namespace NeuralNetwork
         if(outputCol < outputWidth - 1)
         {
           offset += p.strides[1] * channels * sizeof(float);
-          a.add(a.zsi(), imm_u(p.strides[1] * channels * sizeof(float)));
+          a.add(a.zsi(), imm(p.strides[1] * channels * sizeof(float)));
         }
       }
 
       return offset;
     }
 
-    void Pooling2DCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void Pooling2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 3);
       ASSERT(output.rank() == 3);
@@ -235,11 +235,11 @@ namespace NeuralNetwork
       }
 
       // Load input/output base addresses
-      a.mov(a.zsi(), imm_ptr<>(input.data()));
+      a.mov(a.zsi(), imm(input.data()));
       if(input.data() == output.data())
         a.mov(a.zdi(), a.zsi());
       else
-        a.mov(a.zdi(), imm_ptr<>(output.data()));
+        a.mov(a.zdi(), imm(output.data()));
 
       // Pool top-padded rows
       unsigned int inputRow = 0;
@@ -248,7 +248,7 @@ namespace NeuralNetwork
       {
         const unsigned int offset = poolRow(a, afHandler, paddingLeft, paddingTop - inputRow, input.dims(1), output.dims(1), input.dims(2));
         if(inputRow + p.strides[0] < paddingTop)
-          a.sub(a.zsi(), imm_u(offset));
+          a.sub(a.zsi(), imm(offset));
         else
           a.add(a.zsi(), imm((inputRow + p.strides[0] - paddingTop) * input.dims(1) * input.dims(2) * sizeof(float) - offset));
       }
@@ -258,7 +258,7 @@ namespace NeuralNetwork
       for(; inputRow < paddingTop + input.dims(0) - p.kernelSize[0] + 1; inputRow += p.strides[0], outputRow++, nonPaddedRows++);
 
       // Begin loop over image rows
-      a.mov(a.zax(), imm_u(nonPaddedRows));
+      a.mov(a.zax(), imm(nonPaddedRows));
       Label inputRowLoop = a.newLabel();
       a.bind(inputRowLoop);
 
@@ -266,7 +266,7 @@ namespace NeuralNetwork
       const unsigned int offset = poolRow(a, afHandler, paddingLeft, 0, input.dims(1), output.dims(1), input.dims(2));
 
       // Set input offset to next row, respecting the stride
-      a.add(a.zsi(), imm_u(p.strides[0] * input.dims(1) * input.dims(2) * sizeof(float) - offset));
+      a.add(a.zsi(), imm(p.strides[0] * input.dims(1) * input.dims(2) * sizeof(float) - offset));
 
       // End loop over image rows
       a.dec(a.zax());
@@ -278,7 +278,7 @@ namespace NeuralNetwork
         const unsigned int offset = poolRow(a, afHandler, paddingLeft, inputRow + p.kernelSize[0] - (paddingTop + input.dims(0)), input.dims(1), output.dims(1), input.dims(2));
 
         if(outputRow < output.dims(0) - 1)
-          a.add(a.zsi(), imm_u(p.strides[0] * input.dims(1) * input.dims(2) * sizeof(float) - offset));
+          a.add(a.zsi(), imm(p.strides[0] * input.dims(1) * input.dims(2) * sizeof(float) - offset));
       }
     }
   }

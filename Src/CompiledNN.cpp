@@ -147,7 +147,7 @@ namespace NeuralNetwork
         const Conv2DLayer& layer = *static_cast<const Conv2DLayer*>(node.layer);
         if(layer.padding == PaddingType::same)
         {
-          OperationCompiler* extPadding = getPadding({layer.weights.dims(0), layer.weights.dims(1)}, layer.strides);
+          OperationCompiler* extPadding = getPadding({{layer.weights.dims(0), layer.weights.dims(1)}}, layer.strides);
           if(extPadding)
             result.push_back(extPadding);
         }
@@ -167,7 +167,7 @@ namespace NeuralNetwork
         const SeparableConv2DLayer& layer = *static_cast<const SeparableConv2DLayer*>(node.layer);
         if(layer.padding == PaddingType::same)
         {
-          OperationCompiler* extPadding = getPadding({layer.depthwiseWeights.dims(0), layer.depthwiseWeights.dims(1)}, layer.strides);
+          OperationCompiler* extPadding = getPadding({{layer.depthwiseWeights.dims(0), layer.depthwiseWeights.dims(1)}}, layer.strides);
           if(extPadding)
             result.push_back(extPadding);
         }
@@ -193,7 +193,7 @@ namespace NeuralNetwork
         const DepthwiseConv2DLayer& layer = *static_cast<const DepthwiseConv2DLayer*>(node.layer);
         if(layer.padding == PaddingType::same)
         {
-          OperationCompiler* extPadding = getPadding({layer.weights.dims(0), layer.weights.dims(1)}, layer.strides);
+          OperationCompiler* extPadding = getPadding({{layer.weights.dims(0), layer.weights.dims(1)}}, layer.strides);
           if(extPadding)
             result.push_back(extPadding);
         }
@@ -504,19 +504,29 @@ namespace NeuralNetwork
     }
   }
 
+  class CompilationErrorHandler : public ErrorHandler
+  {
+    void handleError(Error err, const char* message, BaseEmitter* origin) override
+    {
+      FAIL(message);
+    }
+  };
+
   void CompiledNN::generateCode(const std::list<Operation>& operations, const CompilerMap& compilers, ActivationFunctionHandler& afHandler)
   {
     // Initialize assembler
     CodeHolder code;
     code.init(asmjitRuntime.getCodeInfo());
-    X86Assembler a(&code);
+    x86::Assembler a(&code);
+    CompilationErrorHandler errorHandler;
+    a.setErrorHandler(&errorHandler);
 
     // Emit Prolog
     if(!operations.empty())
     {
-      a.enter(imm_u(24), imm_u(0)); // Reserve stack space for up to six 32-bit variables, indexed as a.ptr_zbp(-i*4,4)
+      a.enter(imm(24u), imm(0u)); // Reserve stack space for up to six 32-bit variables, indexed as a.ptr_zbp(-i*4,4)
       a.push(a.zbx());
-#if !ASMJIT_ARCH_64BIT || ASMJIT_OS_WINDOWS
+#if ASMJIT_ARCH_X86 != 64 || defined(_WIN32)
       // CDECL or Windows64
       a.push(a.zdi());
       a.push(a.zsi());
@@ -558,7 +568,7 @@ namespace NeuralNetwork
     // Emit epilog
     if(!operations.empty())
     {
-#if !ASMJIT_ARCH_64BIT || ASMJIT_OS_WINDOWS
+#if ASMJIT_ARCH_X86 != 64 || defined(_WIN32)
       a.pop(a.zsi());
       a.pop(a.zdi());
 #endif
@@ -585,12 +595,8 @@ namespace NeuralNetwork
       }
 
     // Bind function
-    ErrorCode err = static_cast<ErrorCode>(a.getLastError());
+    const ErrorCode err = static_cast<ErrorCode>(asmjitRuntime.add<FnType>(&applyFunction, &code));
     ASSERT(err == ErrorCode::kErrorOk);
-    err = static_cast<ErrorCode>(asmjitRuntime.add<FnType>(&applyFunction, &code));
-    ASSERT(err == ErrorCode::kErrorOk);
-    if(err != ErrorCode::kErrorOk)
-      applyFunction = nullptr;
   }
 
   void CompiledNN::compilerBackend(std::list<Operation>& operations, const CompilerMap& compilers,

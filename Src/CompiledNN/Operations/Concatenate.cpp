@@ -9,11 +9,11 @@ namespace NeuralNetwork
 {
   namespace CompiledNNImpl
   {
-    void ConcatenateCompiler::compileCopyPaste(X86Assembler& a, const std::vector<TensorPointerXf>& input, const TensorPointerXf& output, std::size_t innerSize) const
+    void ConcatenateCompiler::compileCopyPaste(x86::Assembler& a, const std::vector<TensorPointerXf>& input, const TensorPointerXf& output, std::size_t innerSize) const
     {
       const bool isInplace = input[0].data() == output.data();
       std::size_t offset = isInplace ? (innerSize * input[0].dims(p.dimension)) : 0;
-      a.mov(a.zdi(), imm_ptr<>(output.data() + offset));
+      a.mov(a.zdi(), imm(output.data() + offset));
       for(std::size_t i = isInplace ? 1 : 0; i < input.size(); ++i)
       {
         std::size_t remainingChannels = innerSize * input[i].dims(p.dimension);
@@ -21,7 +21,7 @@ namespace NeuralNetwork
         const std::size_t alignmentOffset = 4 - (offset % 4);
         offset += remainingChannels;
 
-        a.mov(a.zsi(), imm_ptr<>(input[i].data()));
+        a.mov(a.zsi(), imm(input[i].data()));
         if(!aligned)
         {
           a.movaps(x86::xmm0, a.ptr_zsi());
@@ -29,12 +29,12 @@ namespace NeuralNetwork
           if(remainingChannels <= 4)
           {
             if(i != input.size() - 1)
-              a.add(a.zdi(), imm_u(remainingChannels * sizeof(float)));
+              a.add(a.zdi(), imm(remainingChannels * sizeof(float)));
             continue;
           }
           remainingChannels -= alignmentOffset;
-          a.add(a.zsi(), imm_u(alignmentOffset * sizeof(float)));
-          a.add(a.zdi(), imm_u(alignmentOffset * sizeof(float)));
+          a.add(a.zsi(), imm(alignmentOffset * sizeof(float)));
+          a.add(a.zdi(), imm(alignmentOffset * sizeof(float)));
         }
 
         for(unsigned int stepSize = settings.xmmRegs(); stepSize; --stepSize)
@@ -47,7 +47,7 @@ namespace NeuralNetwork
           if(remainingChannels >= channelsPerStep * 2)
           {
             loop = a.newLabel();
-            a.mov(a.zcx(), imm_u(remainingChannels / channelsPerStep));
+            a.mov(a.zcx(), imm(remainingChannels / channelsPerStep));
             a.bind(loop);
           }
 
@@ -60,9 +60,9 @@ namespace NeuralNetwork
             a.movaps(a.ptr_zdi(step * 4 * sizeof(float)), x86::xmm(step));
 
           if(remainingChannels != channelsPerStep)
-            a.add(a.zsi(), imm_u(stepSize * 4 * sizeof(float)));
+            a.add(a.zsi(), imm(stepSize * 4 * sizeof(float)));
           if(remainingChannels != channelsPerStep || i != input.size() - 1)
-            a.add(a.zdi(), imm_u(stepSize * 4 * sizeof(float)));
+            a.add(a.zdi(), imm(stepSize * 4 * sizeof(float)));
 
           if(remainingChannels >= channelsPerStep * 2)
           {
@@ -87,11 +87,11 @@ namespace NeuralNetwork
           a.movaps(a.ptr_zdi(), x86::xmm0);
         }
         if(i != input.size() - 1 && remainingChannels)
-          a.add(a.zdi(), imm_u(remainingChannels * sizeof(float)));
+          a.add(a.zdi(), imm(remainingChannels * sizeof(float)));
       }
     }
 
-    void ConcatenateCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler,
+    void ConcatenateCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler,
                                       const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const
     {
       ASSERT(output.size() == 1);
@@ -106,19 +106,19 @@ namespace NeuralNetwork
         compileCopyPaste(a, input, output[0], innerSize);
       else
       {
-        const std::array<X86Gp::Id, 3> regs = {X86Gp::kIdSi, X86Gp::kIdBx, X86Gp::kIdDx};
+        const std::array<x86::Gp::Id, 3> regs = {{x86::Gp::kIdSi, x86::Gp::kIdBx, x86::Gp::kIdDx}};
         std::size_t outputOffset = 0;
         for(std::size_t i = 0; i < input.size(); i += regs.size())
         {
           const std::size_t maxInput = std::min(input.size(), i + regs.size());
-          a.mov(a.zdi(), imm_ptr<>(output[0].data() + outputOffset));
+          a.mov(a.zdi(), imm(output[0].data() + outputOffset));
           for(std::size_t j = i; j < maxInput; ++j)
           {
-            a.mov(a.gpzRef(regs[j - i]), imm_ptr<>(input[j].data()));
+            a.mov(a.gpz(regs[j - i]), imm(input[j].data()));
             outputOffset += innerSize * input[j].dims(p.dimension);
             ASSERT((outputOffset % 4) == 0); // TODO -> see below
           }
-          a.mov(a.zax(), imm_u(outerSize));
+          a.mov(a.zax(), imm(outerSize));
           Label outerLoop = a.newLabel();
           a.bind(outerLoop);
 
@@ -133,7 +133,7 @@ namespace NeuralNetwork
 
           for(std::size_t j = i; j < maxInput; ++j)
           {
-            const X86Gp::Id ptrRegister = regs[j - i];
+            const x86::Gp::Id ptrRegister = regs[j - i];
             std::size_t remainingChannels = innerSize * input[j].dims(p.dimension);
             ASSERT((remainingChannels % 4) == 0); // TODO -> currently only works for multiples of 4
 
@@ -147,7 +147,7 @@ namespace NeuralNetwork
               if(remainingChannels >= channelsPerStep * 2)
               {
                 innerLoop = a.newLabel();
-                a.mov(a.zcx(), imm_u(remainingChannels / channelsPerStep));
+                a.mov(a.zcx(), imm(remainingChannels / channelsPerStep));
                 a.bind(innerLoop);
               }
 
@@ -156,14 +156,14 @@ namespace NeuralNetwork
               for(unsigned int step = 0; step < stepSize; step++)
                 a.movaps(a.ptr_zdi(step * 4 * sizeof(float)), x86::xmm(step));
 
-              a.add(a.gpzRef(ptrRegister), imm_u(stepSize * 4 * sizeof(float)));
+              a.add(a.gpz(ptrRegister), imm(stepSize * 4 * sizeof(float)));
               if(remainingChannels == channelsPerStep && j == maxInput - 1 && channelsToSkip)
               {
-                a.add(a.zdi(), imm_u((stepSize * 4 + channelsToSkip) * sizeof(float)));
+                a.add(a.zdi(), imm((stepSize * 4 + channelsToSkip) * sizeof(float)));
                 channelsToSkip = 0;
               }
               else
-                a.add(a.zdi(), imm_u(stepSize * 4 * sizeof(float)));
+                a.add(a.zdi(), imm(stepSize * 4 * sizeof(float)));
 
               if(remainingChannels >= channelsPerStep * 2)
               {
@@ -177,7 +177,7 @@ namespace NeuralNetwork
           }
 
           if(channelsToSkip)
-            a.add(a.zdi(), imm_u(channelsToSkip * sizeof(float)));
+            a.add(a.zdi(), imm(channelsToSkip * sizeof(float)));
 
           a.dec(a.zax());
           a.jnz(outerLoop);

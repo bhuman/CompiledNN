@@ -55,7 +55,7 @@ namespace NeuralNetwork
       }
     }
 
-    void BatchNormalizationCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void BatchNormalizationCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.dims() == output.dims());
       ASSERT(p.dimension < input.rank());
@@ -65,9 +65,9 @@ namespace NeuralNetwork
       const NetworkConstants& norm = constants.back();
 
       const bool isInplace = input.data() == output.data();
-      a.mov(a.zsi(), imm_ptr<const float*>(input.data()));
+      a.mov(a.zsi(), imm(input.data()));
       if(!isInplace)
-        a.mov(a.zdi(), imm_ptr<const float*>(output.data()));
+        a.mov(a.zdi(), imm(output.data()));
 
       // Apply normalization
       if(input.rank() == 1)    // Normalize a vector
@@ -77,7 +77,7 @@ namespace NeuralNetwork
           if(paramLength % (batchSize * 4) == 0)
             break;
 
-        a.mov(a.zcx(), imm_u((p.inputSize + 3) / (4 * batchSize)));
+        a.mov(a.zcx(), imm((p.inputSize + 3) / (4 * batchSize)));
         a.lea(a.zdx(), x86::ptr(norm.label));
         Label loop = a.newLabel();
         a.bind(loop);
@@ -89,10 +89,10 @@ namespace NeuralNetwork
           a.addps(x86::xmm(i), a.ptr_zdx((paramLength + i * 4) * sizeof(float)));
         for(unsigned int i = 0; i < batchSize; i++)
           a.movaps(isInplace ? a.ptr_zsi(i * 4 * sizeof(float)) : a.ptr_zdi(i * 4 * sizeof(float)), x86::xmm(i));
-        a.add(a.zdx(), imm_u(batchSize * 4 * sizeof(float)));
-        a.add(a.zsi(), imm_u(batchSize * 4 * sizeof(float)));
+        a.add(a.zdx(), imm(batchSize * 4 * sizeof(float)));
+        a.add(a.zsi(), imm(batchSize * 4 * sizeof(float)));
         if(!isInplace)
-          a.add(a.zdi(), imm_u(batchSize * 4 * sizeof(float)));
+          a.add(a.zdi(), imm(batchSize * 4 * sizeof(float)));
         a.dec(a.zcx());
         a.jnz(loop);
       }
@@ -110,7 +110,7 @@ namespace NeuralNetwork
               break;
           steps /= batchSize;
 
-          a.mov(a.zcx(), imm_u(steps));
+          a.mov(a.zcx(), imm(steps));
           Label loop = a.newLabel();
           a.bind(loop);
           for(unsigned int i = 0; i < batchSize; i++)
@@ -120,9 +120,9 @@ namespace NeuralNetwork
             a.addps(x86::xmm(i), x86::xmm(settings.xmmRegs() - 1));
             a.movaps(isInplace ? a.ptr_zsi(16 * i) : a.ptr_zdi(16 * i), x86::xmm(i));
           }
-          a.add(a.zsi(), imm_u(16 * batchSize));
+          a.add(a.zsi(), imm(16 * batchSize));
           if(!isInplace)
-            a.add(a.zdi(), imm_u(16 * batchSize));
+            a.add(a.zdi(), imm(16 * batchSize));
           a.dec(a.zcx());
           a.jne(loop);
         }
@@ -130,39 +130,39 @@ namespace NeuralNetwork
         {
           if(paramLength == 4)   // Normalization vector fits into a single register
           {
-            a.mov(a.zcx(), imm_u(static_cast<unsigned int>(input.size() + 3) / 4));
+            a.mov(a.zcx(), imm(static_cast<unsigned int>(input.size() + 3) / 4));
             Label loop = a.newLabel();
             a.bind(loop);
             a.movaps(x86::xmm0, a.ptr_zsi());
             a.mulps(x86::xmm0, x86::ptr(norm.label));
             a.addps(x86::xmm0, x86::ptr(norm.label, 16));
             a.movaps(isInplace ? a.ptr_zsi() : a.ptr_zdi(), x86::xmm0);
-            a.add(a.zsi(), imm_u(16));
+            a.add(a.zsi(), imm(16u));
             if(!isInplace)
-              a.add(a.zdi(), imm_u(16));
+              a.add(a.zdi(), imm(16u));
             a.dec(a.zcx());
             a.jnz(loop);
           }
           else // Iterate over normalization vector offset
           {
-            a.mov(a.zcx(), imm_u(static_cast<unsigned int>(input.size() + 3) / 4 + 1));
+            a.mov(a.zcx(), imm(static_cast<unsigned int>(input.size() + 3) / 4 + 1));
             Label resetParamPtr = a.newLabel();
             Label end = a.newLabel();
             a.bind(resetParamPtr);
             a.dec(a.zcx());
             a.jz(end);
-            a.mov(a.zax(), imm_u(paramLength / 4));
+            a.mov(a.zax(), imm(paramLength / 4));
             a.lea(a.zdx(), x86::ptr(norm.label));
             Label loop = a.newLabel();
             a.bind(loop);
             a.movaps(x86::xmm0, a.ptr_zsi());
             a.mulps(x86::xmm0, a.ptr_zdx());
             a.addps(x86::xmm0, a.ptr_zdx(paramLength * sizeof(float)));
-            a.add(a.zdx(), imm_u(16));
+            a.add(a.zdx(), imm(16u));
             a.movaps(isInplace ? a.ptr_zsi() : a.ptr_zdi(), x86::xmm0);
-            a.add(a.zsi(), imm_u(16));
+            a.add(a.zsi(), imm(16u));
             if(!isInplace)
-              a.add(a.zdi(), imm_u(16));
+              a.add(a.zdi(), imm(16u));
             a.dec(a.zax());
             a.jz(resetParamPtr);
             a.dec(a.zcx());

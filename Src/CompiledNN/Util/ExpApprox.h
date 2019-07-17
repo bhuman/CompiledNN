@@ -33,7 +33,7 @@ namespace NeuralNetwork
       }
 
       template<bool single = false, typename FactorType, typename OffsetType>
-      void apply(X86Assembler& a, const std::vector<X86Xmm>& values, const FactorType factor, const OffsetType offset);
+      void apply(x86::Assembler& a, const std::vector<x86::Xmm>& values, const FactorType factor, const OffsetType offset);
     }
   }
 }

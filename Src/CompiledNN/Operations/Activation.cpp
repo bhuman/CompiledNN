@@ -10,7 +10,7 @@ namespace NeuralNetwork
 {
   namespace CompiledNNImpl
   {
-    void ActivationCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void ActivationCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.dims() == output.dims());
       const bool isInplace = input.data() == output.data();
@@ -18,9 +18,9 @@ namespace NeuralNetwork
       if(isInplace && p.activationDesc == CompiledActivationFunctionId::linear)
         return;
 
-      a.mov(a.zsi(), imm_ptr<>(input.data()));
+      a.mov(a.zsi(), imm(input.data()));
       if(!isInplace)
-        a.mov(a.zdi(), imm_ptr<>(output.data()));
+        a.mov(a.zdi(), imm(output.data()));
 
       ASSERT(ActivationFunctionHandler::neededSpares(p.activationDesc) < settings.xmmRegs());
       unsigned int remainingChannels = static_cast<unsigned int>(input.size());
@@ -42,7 +42,7 @@ namespace NeuralNetwork
         if(remainingChannels >= channelsPerStep * 2)
         {
           loop = a.newLabel();
-          a.mov(a.zcx(), imm_u(remainingChannels / channelsPerStep));
+          a.mov(a.zcx(), imm(remainingChannels / channelsPerStep));
           a.bind(loop);
         }
 
@@ -54,9 +54,9 @@ namespace NeuralNetwork
 
         if(remainingChannels != channelsPerStep)
         {
-          a.add(a.zsi(), imm_u(stepSize * 4 * sizeof(float)));
+          a.add(a.zsi(), imm(stepSize * 4 * sizeof(float)));
           if(!isInplace)
-            a.add(a.zdi(), imm_u(stepSize * 4 * sizeof(float)));
+            a.add(a.zdi(), imm(stepSize * 4 * sizeof(float)));
         }
 
         if(remainingChannels >= channelsPerStep * 2)

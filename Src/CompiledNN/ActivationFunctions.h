@@ -148,12 +148,12 @@ namespace NeuralNetwork
     {
     private:
       using DefineDataFnType = std::function<void(std::vector<float>&, const ActivationFunctionParameters* const)>;
-      using InitializeFnType = std::function<void(X86Assembler&, const ActivationFunctionParameters* const, const Label&, const std::vector<X86Xmm>&)>;
-      using ApplyFnType = std::function<void(X86Assembler&, const ActivationFunctionParameters* const, const Label&, const std::vector<X86Xmm>&, const std::vector<X86Xmm>&)>;
+      using InitializeFnType = std::function<void(x86::Assembler&, const ActivationFunctionParameters* const, const Label&, const std::vector<x86::Xmm>&)>;
+      using ApplyFnType = std::function<void(x86::Assembler&, const ActivationFunctionParameters* const, const Label&, const std::vector<x86::Xmm>&, const std::vector<x86::Xmm>&)>;
 
       NetworkConstants constants;
-      std::vector<X86Xmm> spares;
-      std::vector<X86Xmm> values;
+      std::vector<x86::Xmm> spares;
+      std::vector<x86::Xmm> values;
       const ActivationFunctionDescriptor& desc;
       const DefineDataFnType defineDataFn;
       const InitializeFnType initializeFn;
@@ -163,13 +163,13 @@ namespace NeuralNetwork
       ActivationFn(ActivationFn& other) = delete;
       ActivationFn(ActivationFn&& other) = delete;
 
-      void prepare(const std::initializer_list<X86Xmm> spares, const std::initializer_list<X86Xmm> values)
+      void prepare(const std::initializer_list<x86::Xmm> spares, const std::initializer_list<x86::Xmm> values)
       {
         this->spares = spares;
         this->values = values;
       }
 
-      void defineData(X86Assembler& a)
+      void defineData(x86::Assembler& a)
       {
         constants.data.clear();
         defineDataFn(constants.data, desc.p);
@@ -180,11 +180,11 @@ namespace NeuralNetwork
       friend class ActivationFunctionHandler;
 
     public:
-      inline void addSpare(const X86Xmm reg) { spares.push_back(reg); }
-      inline void addValue(const X86Xmm reg) { values.push_back(reg); }
+      inline void addSpare(const x86::Xmm reg) { spares.push_back(reg); }
+      inline void addValue(const x86::Xmm reg) { values.push_back(reg); }
 
-      inline void initialize(X86Assembler& a) { initializeFn(a, desc.p, constants.label, spares); }
-      inline void apply(X86Assembler& a) { applyFn(a, desc.p, constants.label, spares, values); }
+      inline void initialize(x86::Assembler& a) { initializeFn(a, desc.p, constants.label, spares); }
+      inline void apply(x86::Assembler& a) { applyFn(a, desc.p, constants.label, spares, values); }
     };
 
     class ActivationFunctionHandler
@@ -209,8 +209,8 @@ namespace NeuralNetwork
     public:
       ActivationFunctionHandler(const CompilationSettings& settings) : settings(settings) {}
 
-      ActivationFn& prepare(const ActivationFunctionDescriptor& desc, const bool single, X86Assembler& a, const std::initializer_list<X86Xmm> spares, const std::initializer_list<X86Xmm> values);
-      void compileData(X86Assembler& a) const;
+      ActivationFn& prepare(const ActivationFunctionDescriptor& desc, const bool single, x86::Assembler& a, const std::initializer_list<x86::Xmm> spares, const std::initializer_list<x86::Xmm> values);
+      void compileData(x86::Assembler& a) const;
 
       static unsigned int neededSpares(const ActivationFunctionDescriptor& desc);
     };

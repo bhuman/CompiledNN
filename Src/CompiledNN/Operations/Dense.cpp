@@ -105,7 +105,7 @@ namespace NeuralNetwork
       }
     }
 
-    void DenseCompiler::compileInputBatch(X86Assembler& a, const unsigned int remainingOutputs, const unsigned int stepSize, const unsigned int remainingInputs, const bool lastOutputBatch, const bool lastInputBatch) const
+    void DenseCompiler::compileInputBatch(x86::Assembler& a, const unsigned int remainingOutputs, const unsigned int stepSize, const unsigned int remainingInputs, const bool lastOutputBatch, const bool lastInputBatch) const
     {
       // Read input
       if(remainingInputs == 1)
@@ -113,9 +113,9 @@ namespace NeuralNetwork
       else
         a.movaps(x86::xmm(settings.xmmRegs() - 1), a.ptr_zsi());
       if(remainingInputs != 4)
-        a.shufps(x86::xmm(settings.xmmRegs() - 1), x86::xmm(settings.xmmRegs() - 1), imm_u(0 | ((1 % remainingInputs) << 2) | ((2 % remainingInputs) << 4) | ((3 % remainingInputs) << 6)));
+        a.shufps(x86::xmm(settings.xmmRegs() - 1), x86::xmm(settings.xmmRegs() - 1), imm(0u | ((1 % remainingInputs) << 2) | ((2 % remainingInputs) << 4) | ((3 % remainingInputs) << 6)));
       if(!lastInputBatch)
-        a.add(a.zsi(), imm_u(4 * sizeof(float)));
+        a.add(a.zsi(), imm(4 * sizeof(float)));
 
       // Multiply with weights
       unsigned int weightOffset = 0;
@@ -139,15 +139,15 @@ namespace NeuralNetwork
         }
 
         if(shuffle > 1)
-          a.shufps(x86::xmm(settings.xmmRegs() - 1), x86::xmm(settings.xmmRegs() - 1), imm_u((1 % remainingInputs) | ((2 % remainingInputs) << 2) | ((3 % remainingInputs) << 4) | ((4 % remainingInputs) << 6)));
+          a.shufps(x86::xmm(settings.xmmRegs() - 1), x86::xmm(settings.xmmRegs() - 1), imm((1 % remainingInputs) | ((2 % remainingInputs) << 2) | ((3 % remainingInputs) << 4) | ((4 % remainingInputs) << 6)));
       }
 
       // Adjust weight offset if necessary
       if(!lastOutputBatch || (!lastInputBatch && (p.weights->dims(0) / 4 >= 2 || p.weights->dims(0) % 4 != 0)))
-        a.add(a.zdx(), imm_u(weightOffset));
+        a.add(a.zdx(), imm(weightOffset));
     }
 
-    void DenseCompiler::compileOutputBatch(X86Assembler& a, ActivationFunctionHandler& afHandler, const float* const input, const unsigned int remainingOutputs, const bool last) const
+    void DenseCompiler::compileOutputBatch(x86::Assembler& a, ActivationFunctionHandler& afHandler, const float* const input, const unsigned int remainingOutputs, const bool last) const
     {
       const unsigned int stepSize = (remainingOutputs + 3) / 4;
 
@@ -156,7 +156,7 @@ namespace NeuralNetwork
         a.xorps(x86::xmm(step), x86::xmm(step));
 
       // Initialize input pointer
-      a.mov(a.zsi(), imm_ptr<>(input));
+      a.mov(a.zsi(), imm(input));
 
       if(p.weights->dims(0) > 4)
       {
@@ -165,7 +165,7 @@ namespace NeuralNetwork
         if(p.weights->dims(0) / 4 >= 2)
         {
           inputLoop = a.newLabel();
-          a.mov(a.zcx(), imm_u(p.weights->dims(0) / 4));
+          a.mov(a.zcx(), imm(p.weights->dims(0) / 4));
           a.bind(inputLoop);
         }
 
@@ -202,31 +202,32 @@ namespace NeuralNetwork
         if(p.postBatchNormalization)
         {
           // Multiply with factors
-#if ASMJIT_ARCH_64BIT
-          a.add(a.zbx(), x86::r8);
-#else
-          a.add(a.zbx(), a.ptr_zbp(-8, 4));
-#endif
+          if(settings.useX64)
+            a.add(a.zbx(), x86::r8);
+          else
+            a.add(a.zbx(), a.ptr_zbp(-8, 4));
           for(unsigned int step = 0; step < stepSize; step++)
             a.mulps(x86::xmm(step), a.ptr_zbx(step * 4 * sizeof(float)));
 
           // Add offsets
-#if ASMJIT_ARCH_64BIT
-          a.add(a.zbx(), x86::r9);
-#else
-          a.add(a.zbx(), a.ptr_zbp(-4, 4));
-#endif
+          if(settings.useX64)
+            a.add(a.zbx(), x86::r9);
+          else
+            a.add(a.zbx(), a.ptr_zbp(-4, 4));
           for(unsigned int step = 0; step < stepSize; step++)
             a.addps(x86::xmm(step), a.ptr_zbx(step * 4 * sizeof(float)));
 
           // Reset bias pointer
-#if ASMJIT_ARCH_64BIT
-          a.sub(a.zbx(), x86::r9);
-          a.sub(a.zbx(), x86::r8);
-#else
-          a.sub(a.zbx(), a.ptr_zbp(-4, 4));
-          a.sub(a.zbx(), a.ptr_zbp(-8, 4));
-#endif
+          if(settings.useX64)
+          {
+            a.sub(a.zbx(), x86::r9);
+            a.sub(a.zbx(), x86::r8);
+          }
+          else
+          {
+            a.sub(a.zbx(), a.ptr_zbp(-4, 4));
+            a.sub(a.zbx(), a.ptr_zbp(-8, 4));
+          }
         }
       }
       if(p.postActivation != CompiledActivationFunctionId::linear)
@@ -243,7 +244,7 @@ namespace NeuralNetwork
 
       // Advance bias pointer
       if(!last)
-        a.add(a.zbx(), imm_u(stepSize * 4 * sizeof(float)));
+        a.add(a.zbx(), imm(stepSize * 4 * sizeof(float)));
 
       // Store results
       for(unsigned int step = 0; step < stepSize; step++)
@@ -251,21 +252,21 @@ namespace NeuralNetwork
 
       // Advance destination pointer if necessary
       if(!last && (p.weights->dims(1) / outputBatchSize >= 2 || p.weights->dims(1) % outputBatchSize != 0))
-        a.add(a.zdi(), imm_u(stepSize * 4 * sizeof(float)));
+        a.add(a.zdi(), imm(stepSize * 4 * sizeof(float)));
     }
 
-    void DenseCompiler::compileSimple(X86Assembler& a, ActivationFunctionHandler& afHandler, const float* const input, const float* const output) const
+    void DenseCompiler::compileSimple(x86::Assembler& a, ActivationFunctionHandler& afHandler, const float* const input, const float* const output) const
     {
       // Declare labels
       const NetworkConstants& weights = constants[0];
       const NetworkConstants& biases = constants[1];
 
-      a.mov(a.zsi(), imm_ptr<>(input));
+      a.mov(a.zsi(), imm(input));
 
       bool destInZSI = input == output;
 
       if(!destInZSI)
-        a.mov(a.zdi(), imm_ptr<>(output));
+        a.mov(a.zdi(), imm(output));
 
       if(p.weights->dims(0) == 1)
       {
@@ -351,7 +352,7 @@ namespace NeuralNetwork
             Label loop;
             if(remainingChannels >= stepSize * 8)
             {
-              a.mov(a.zcx(), imm_u(remainingChannels / (stepSize * 4)));
+              a.mov(a.zcx(), imm(remainingChannels / (stepSize * 4)));
               loop = a.newLabel();
               a.bind(loop);
             }
@@ -376,8 +377,8 @@ namespace NeuralNetwork
             // Increment input and weight pointers if there will be further steps
             if(remainingChannels != stepSize * 4)
             {
-              a.add(a.zsi(), imm_u(stepSize * 4 * sizeof(float)));
-              a.add(a.zdx(), imm_u(stepSize * 4 * sizeof(float)));
+              a.add(a.zsi(), imm(stepSize * 4 * sizeof(float)));
+              a.add(a.zdx(), imm(stepSize * 4 * sizeof(float)));
             }
 
             // End loop if the stepsize can be applied multiple times
@@ -447,7 +448,7 @@ namespace NeuralNetwork
       a.movss(destInZSI ? a.ptr_zsi() : a.ptr_zdi(), x86::xmm0);
     }
 
-    void DenseCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void DenseCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 1);
       ASSERT(output.rank() == 1);
@@ -467,7 +468,7 @@ namespace NeuralNetwork
 
       // Load offsets
       a.lea(a.zdx(), x86::ptr(weights.label));
-      a.mov(a.zdi(), imm_ptr<>(output.data()));
+      a.mov(a.zdi(), imm(output.data()));
       a.lea(a.zbx(), x86::ptr(biases.label));
 
       if(p.activationDesc != CompiledActivationFunctionId::linear && p.postBatchNormalization)
@@ -478,13 +479,16 @@ namespace NeuralNetwork
         a.lea(a.zcx(), x86::ptr(constants[3].label));
         a.sub(a.zcx(), a.zax());
         a.sub(a.zax(), a.zbx());
-#if ASMJIT_ARCH_64BIT
-        a.mov(x86::r8, a.zax());
-        a.mov(x86::r9, a.zcx());
-#else
-        a.mov(a.ptr_zbp(-8, 4), x86::eax);
-        a.mov(a.ptr_zbp(-4, 4), x86::ecx);
-#endif
+        if(settings.useX64)
+        {
+          a.mov(x86::r8, a.zax());
+          a.mov(x86::r9, a.zcx());
+        }
+        else
+        {
+          a.mov(a.ptr_zbp(-8, 4), x86::eax);
+          a.mov(a.ptr_zbp(-4, 4), x86::ecx);
+        }
       }
 
       if(p.weights->dims(1) > outputBatchSize)
@@ -494,7 +498,7 @@ namespace NeuralNetwork
         if(p.weights->dims(1) / outputBatchSize >= 2)
         {
           outputBatchLoop = a.newLabel();
-          a.mov(a.zax(), imm_u(p.weights->dims(1) / outputBatchSize));
+          a.mov(a.zax(), imm(p.weights->dims(1) / outputBatchSize));
           a.bind(outputBatchLoop);
         }
 

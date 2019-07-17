@@ -46,7 +46,7 @@ namespace NeuralNetwork
 
 
       virtual void initialize() = 0;
-      virtual void compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const = 0;
+      virtual void compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const = 0;
       virtual std::vector<std::vector<unsigned int>> calcOutputDimensions(const std::vector<std::vector<unsigned int>>& inputDimensions) const = 0;
       virtual std::vector<std::size_t> routeIO(const std::vector<std::size_t>& indices, const std::vector<std::vector<unsigned int>>& inputDimensions) const = 0;
 
@@ -61,7 +61,7 @@ namespace NeuralNetwork
     {
       SISOOperationCompiler(const CompilationSettings& settings) : OperationCompiler(settings) {}
 
-      void compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const override
+      void compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const override
       {
         ASSERT(input.size() == 1);
         ASSERT(output.size() == 1);
@@ -81,7 +81,7 @@ namespace NeuralNetwork
         return {};
       }
 
-      virtual void compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const = 0;
+      virtual void compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const = 0;
       virtual std::vector<unsigned int> calcOutputDimensions(const std::vector<unsigned int>& inputDimensions) const
       {
         return inputDimensions;

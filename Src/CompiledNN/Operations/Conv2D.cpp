@@ -73,7 +73,7 @@ namespace NeuralNetwork
       }
     }
 
-    void Conv2DCompiler::compileFilter(X86Assembler& a, const bool inputAligned, const unsigned int remainingOutputs, const unsigned int remainingInput, const bool lastFilter) const
+    void Conv2DCompiler::compileFilter(x86::Assembler& a, const bool inputAligned, const unsigned int remainingOutputs, const unsigned int remainingInput, const bool lastFilter) const
     {
       const unsigned int stepSize = (remainingOutputs + 3) / 4;
 
@@ -85,9 +85,9 @@ namespace NeuralNetwork
       else
         a.movups(x86::xmm(settings.xmmRegs() - 1), a.ptr_zdx());
       if(remainingInput != 4)
-        a.shufps(x86::xmm(settings.xmmRegs() - 1), x86::xmm(settings.xmmRegs() - 1), imm_u(0 | ((1 % remainingInput) << 2) | ((2 % remainingInput) << 4) | ((3 % remainingInput) << 6)));
+        a.shufps(x86::xmm(settings.xmmRegs() - 1), x86::xmm(settings.xmmRegs() - 1), imm(0u | ((1 % remainingInput) << 2) | ((2 % remainingInput) << 4) | ((3 % remainingInput) << 6)));
       if(!lastFilter)
-        a.add(a.zdx(), imm_u(4 * sizeof(float)));
+        a.add(a.zdx(), imm(4 * sizeof(float)));
 
       // Apply filter
       unsigned int filterOffset = 0;
@@ -111,12 +111,12 @@ namespace NeuralNetwork
         }
 
         if(shuffle > 1)
-          a.shufps(x86::xmm(settings.xmmRegs() - 1), x86::xmm(settings.xmmRegs() - 1), imm_u((1 % remainingInput) | ((2 % remainingInput) << 2) | ((3 % remainingInput) << 4) | ((4 % remainingInput) << 6)));
+          a.shufps(x86::xmm(settings.xmmRegs() - 1), x86::xmm(settings.xmmRegs() - 1), imm((1 % remainingInput) | ((2 % remainingInput) << 2) | ((3 % remainingInput) << 4) | ((4 % remainingInput) << 6)));
       }
-      a.add(a.zbx(), imm_u(filterOffset));
+      a.add(a.zbx(), imm(filterOffset));
     }
 
-    void Conv2DCompiler::compileOutputBatch(X86Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int remainingOutputs) const
+    void Conv2DCompiler::compileOutputBatch(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int remainingOutputs) const
     {
       const NetworkConstants& biases = constants[1];
       const bool inputAligned = (p.strides[1] * p.weights->dims(2)) % 4 == 0;
@@ -171,7 +171,7 @@ namespace NeuralNetwork
       if(p.weights->dims(0) > 1)
       {
         filterRowLoop = a.newLabel();
-        a.mov(p.weights->dims(1) * p.weights->dims(2) > 4 ? a.zax() : a.zcx(), imm_u(p.weights->dims(0)));
+        a.mov(p.weights->dims(1) * p.weights->dims(2) > 4 ? a.zax() : a.zcx(), imm(p.weights->dims(0)));
         a.bind(filterRowLoop);
       }
 
@@ -179,7 +179,7 @@ namespace NeuralNetwork
       {
         // Begin loop over weight cols
         Label filterColLoop = a.newLabel();
-        a.mov(a.zcx(), imm_u(p.weights->dims(1) * p.weights->dims(2) / 4));
+        a.mov(a.zcx(), imm(p.weights->dims(1) * p.weights->dims(2) / 4));
         a.bind(filterColLoop);
 
         compileFilter(a, inputAligned, remainingOutputs, 4);
@@ -197,7 +197,7 @@ namespace NeuralNetwork
       if(p.weights->dims(0) > 1)
       {
         // Set input pointer to next row
-        a.add(a.zdx(), imm_u(((inputWidth - p.weights->dims(1)) * p.weights->dims(2) + remainingInput) * sizeof(float)));
+        a.add(a.zdx(), imm(((inputWidth - p.weights->dims(1)) * p.weights->dims(2) + remainingInput) * sizeof(float)));
 
         a.dec(p.weights->dims(1) * p.weights->dims(2) > 4 ? a.zax() : a.zcx());
         a.jnz(filterRowLoop);
@@ -257,10 +257,10 @@ namespace NeuralNetwork
         else
           a.movups(a.ptr_zdi(step * 4 * sizeof(float)), x86::xmm(step));
       }
-      a.add(a.zdi(), imm_u(remainingOutputs * sizeof(float)));
+      a.add(a.zdi(), imm(remainingOutputs * sizeof(float)));
     }
 
-    void Conv2DCompiler::compileSimpleConvolution(X86Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int outputHeight, const unsigned int outputWidth) const
+    void Conv2DCompiler::compileSimpleConvolution(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int outputHeight, const unsigned int outputWidth) const
     {
       const unsigned int inputSize = p.weights->dims(1) * p.weights->dims(2);
 
@@ -310,7 +310,7 @@ namespace NeuralNetwork
       Label rowLoop;
       if(outputHeight > 1)
       {
-        a.mov(a.zax(), imm_u(outputHeight));
+        a.mov(a.zax(), imm(outputHeight));
         rowLoop = a.newLabel();
         a.bind(rowLoop);
       }
@@ -319,7 +319,7 @@ namespace NeuralNetwork
       Label filterLoop;
       if(outputWidth > 1)
       {
-        a.mov(a.zcx(), imm_u(outputWidth));
+        a.mov(a.zcx(), imm(outputWidth));
         filterLoop = a.newLabel();
         a.bind(filterLoop);
       }
@@ -337,7 +337,7 @@ namespace NeuralNetwork
           if((p.strides[1] * p.weights->dims(2)) % 4 == 0)
           {
             if(inputSize < 4)
-              a.pshufd(x86::xmm(regOffset + filterRow * inputSize), a.ptr_zsi(sourceOffset), imm_u(0 | ((1 % inputSize) << 2) | ((2 % inputSize) << 4) | ((3 % inputSize) << 6)));
+              a.pshufd(x86::xmm(regOffset + filterRow * inputSize), a.ptr_zsi(sourceOffset), imm(0 | ((1 % inputSize) << 2) | ((2 % inputSize) << 4) | ((3 % inputSize) << 6)));
             else
               a.movaps(x86::xmm(regOffset + filterRow * inputSize), a.ptr_zsi(sourceOffset));
           }
@@ -345,14 +345,14 @@ namespace NeuralNetwork
           {
             a.movups(x86::xmm(regOffset + filterRow * inputSize), a.ptr_zsi(sourceOffset));
             if(inputSize < 4)
-              a.pshufd(x86::xmm(regOffset + filterRow * inputSize), x86::xmm(regOffset + filterRow * inputSize), imm_u(0 | ((1 % inputSize) << 2) | ((2 % inputSize) << 4) | ((3 % inputSize) << 6)));
+              a.pshufd(x86::xmm(regOffset + filterRow * inputSize), x86::xmm(regOffset + filterRow * inputSize), imm(0 | ((1 % inputSize) << 2) | ((2 % inputSize) << 4) | ((3 % inputSize) << 6)));
           }
           sourceOffset += (inputWidth * p.weights->dims(2)) * sizeof(float);
         }
         for(unsigned int i = 1; i < inputSize; i++)
         {
           for(unsigned int filterRow = 0; filterRow < rowsInThisIteration; filterRow++)
-            a.pshufd(x86::xmm(regOffset + filterRow * inputSize + i), x86::xmm(regOffset + filterRow * inputSize + i - 1), imm_u((1 % inputSize) | ((2 % inputSize) << 2) | ((3 % inputSize) << 4) | ((4 % inputSize) << 6)));
+            a.pshufd(x86::xmm(regOffset + filterRow * inputSize + i), x86::xmm(regOffset + filterRow * inputSize + i - 1), imm((1 % inputSize) | ((2 % inputSize) << 2) | ((3 % inputSize) << 4) | ((4 % inputSize) << 6)));
         }
         for(unsigned int i = 0; i < rowsInThisIteration * inputSize; i++)
         {
@@ -443,12 +443,12 @@ namespace NeuralNetwork
         a.movaps(a.ptr_zdi(), x86::xmm0);
       else
         a.movups(a.ptr_zdi(), x86::xmm0);
-      a.add(a.zdi(), imm_u(p.weights->dims(3) * sizeof(float)));
+      a.add(a.zdi(), imm(p.weights->dims(3) * sizeof(float)));
 
       // End loop over cols
       if(outputWidth > 1)
       {
-        a.add(a.zsi(), imm_u(p.strides[1] * p.weights->dims(2) * sizeof(float)));
+        a.add(a.zsi(), imm(p.strides[1] * p.weights->dims(2) * sizeof(float)));
         a.dec(a.zcx());
         a.jnz(filterLoop);
       }
@@ -457,13 +457,13 @@ namespace NeuralNetwork
       if(outputHeight > 1)
       {
         if(p.strides[0] * inputWidth != outputWidth * p.strides[1] || outputWidth <= 1)
-          a.add(a.zsi(), imm_u(((p.strides[0] * inputWidth - outputWidth * p.strides[1]) * p.weights->dims(2) + (outputWidth <= 1 ? p.strides[1] * p.weights->dims(2) : 0)) * sizeof(float)));
+          a.add(a.zsi(), imm(((p.strides[0] * inputWidth - outputWidth * p.strides[1]) * p.weights->dims(2) + (outputWidth <= 1 ? p.strides[1] * p.weights->dims(2) : 0)) * sizeof(float)));
         a.dec(a.zax());
         a.jnz(rowLoop);
       }
     }
 
-    void Conv2DCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void Conv2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 3);
       ASSERT(output.rank() == 3);
@@ -474,34 +474,31 @@ namespace NeuralNetwork
       unsigned int inputWidth = input.dims(1);
 
       // Load input/output base addresses
-      a.mov(a.zsi(), imm_ptr<const float*>(input.data()));
+      a.mov(a.zsi(), imm(input.data()));
       if(input.data() == output.data())
         a.mov(a.zdi(), a.zsi());
       else
-        a.mov(a.zdi(), imm_ptr<const float*>(output.data()));
+        a.mov(a.zdi(), imm(output.data()));
 
       if(p.weights->dims(3) <= 4 && p.weights->dims(1) * p.weights->dims(2) <= 4)
         compileSimpleConvolution(a, afHandler, inputWidth, output.dims(0), output.dims(1));
       else
       {
         // Begin loop over output image rows
-#if ASMJIT_ARCH_64BIT
-        a.mov(x86::r8d, imm_u(output.dims(0)));
-#else
-        a.mov(a.ptr_zbp(-4, 4), imm_u(output.dims(0)));
-#endif
+        if(settings.useX64)
+          a.mov(x86::r8d, imm(output.dims(0)));
+        else
+          a.mov(a.ptr_zbp(-4, 4), imm(output.dims(0)));
         Label inputRowLoop = a.newLabel();
         a.bind(inputRowLoop);
 
         // Begin loop over output image cols
         if(p.weights->dims(3) / outputBatchSize < 2 && p.weights->dims(1) * p.weights->dims(2) <= 4)
-          a.mov(a.zax(), imm_u(output.dims(1)));
+          a.mov(a.zax(), imm(output.dims(1)));
+        else if(settings.useX64)
+          a.mov(x86::r9d, imm(output.dims(1)));
         else
-#if ASMJIT_ARCH_64BIT
-          a.mov(x86::r9d, imm_u(output.dims(1)));
-#else
-          a.mov(a.ptr_zbp(-8, 4), imm_u(output.dims(1)));
-#endif
+          a.mov(a.ptr_zbp(-8, 4), imm(output.dims(1)));
         Label inputColLoop = a.newLabel();
         a.bind(inputColLoop);
 
@@ -518,13 +515,14 @@ namespace NeuralNetwork
           {
             outputBatchLoop = a.newLabel();
             if(p.weights->dims(1) * p.weights->dims(2) > 4)
-#if ASMJIT_ARCH_64BIT
-              a.mov(x86::r10d, imm_u(p.weights->dims(3) / outputBatchSize));
-#else
-              a.mov(a.ptr_zbp(-12, 4), imm_u(p.weights->dims(3) / outputBatchSize));
-#endif
+            {
+              if(settings.useX64)
+                a.mov(x86::r10d, imm(p.weights->dims(3) / outputBatchSize));
+              else
+                a.mov(a.ptr_zbp(-12, 4), imm(p.weights->dims(3) / outputBatchSize));
+            }
             else
-              a.mov(a.zax(), imm_u(p.weights->dims(3) / outputBatchSize));
+              a.mov(a.zax(), imm(p.weights->dims(3) / outputBatchSize));
             a.bind(outputBatchLoop);
           }
 
@@ -534,11 +532,12 @@ namespace NeuralNetwork
           if(p.weights->dims(3) / outputBatchSize >= 2)
           {
             if(p.weights->dims(1) * p.weights->dims(2) > 4)
-#if ASMJIT_ARCH_64BIT
-              a.dec(x86::r10d);
-#else
-              a.dec(a.ptr_zbp(-12, 4));
-#endif
+            {
+              if(settings.useX64)
+                a.dec(x86::r10d);
+              else
+                a.dec(a.ptr_zbp(-12, 4));
+            }
             else
               a.dec(a.zax());
             a.jnz(outputBatchLoop);
@@ -550,29 +549,26 @@ namespace NeuralNetwork
           compileOutputBatch(a, afHandler, inputWidth, remainingOutputs);
 
         // Set input offset to next column, respecting the stride
-        a.add(a.zsi(), imm_u(p.strides[1] * p.weights->dims(2) * sizeof(float)));
+        a.add(a.zsi(), imm(p.strides[1] * p.weights->dims(2) * sizeof(float)));
 
         // End loop over output image cols
         if(p.weights->dims(3) / outputBatchSize < 2 && p.weights->dims(1) * p.weights->dims(2) <= 4)
           a.dec(a.zax());
-        else
-#if ASMJIT_ARCH_64BIT
+        else if(settings.useX64)
           a.dec(x86::r9d);
-#else
+        else
           a.dec(a.ptr_zbp(-8, 4));
-#endif
         a.jnz(inputColLoop);
 
         // Set input offset to next row, respecting the stride
         if(p.strides[0] * inputWidth != output.dims(1) * p.strides[1])
-          a.add(a.zsi(), imm_u((p.strides[0] * inputWidth - output.dims(1) * p.strides[1]) * p.weights->dims(2) * sizeof(float)));
+          a.add(a.zsi(), imm((p.strides[0] * inputWidth - output.dims(1) * p.strides[1]) * p.weights->dims(2) * sizeof(float)));
 
         // End loop over output image rows
-#if ASMJIT_ARCH_64BIT
-        a.dec(x86::r8d);
-#else
-        a.dec(a.ptr_zbp(-4, 4));
-#endif
+        if(settings.useX64)
+          a.dec(x86::r8d);
+        else
+          a.dec(a.ptr_zbp(-4, 4));
         a.jnz(inputRowLoop);
       }
     }

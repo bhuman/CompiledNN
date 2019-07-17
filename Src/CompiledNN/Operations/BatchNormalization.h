@@ -26,7 +26,7 @@ namespace NeuralNetwork
       inline bool canBeInplace() const override { return true; }
 
       void initialize() override;
-      void compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const override;
+      void compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const override;
 
     private:
       unsigned int paramLength;

@@ -36,7 +36,7 @@ namespace NeuralNetwork
       }
 
       void initialize() override;
-      void compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const override;
+      void compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const override;
 
       inline std::vector<unsigned int> calcOutputDimensions(const std::vector<unsigned int>& inputDimensions) const override
       {
@@ -46,9 +46,9 @@ namespace NeuralNetwork
     private:
       unsigned int outputBatchSize = 0;
 
-      void compileInputBatch(X86Assembler& a, const unsigned int remainingOutputs, const unsigned int stepSize, const unsigned int remainingInputs, const bool lastOutputBatch, const bool lastInputBatch = false) const;
-      void compileOutputBatch(X86Assembler& a, ActivationFunctionHandler& afHandler, const float* const input, const unsigned int remainingOutputs, const bool last = false) const;
-      void compileSimple(X86Assembler& a, ActivationFunctionHandler& afHandler, const float* const input, const float* const output) const;
+      void compileInputBatch(x86::Assembler& a, const unsigned int remainingOutputs, const unsigned int stepSize, const unsigned int remainingInputs, const bool lastOutputBatch, const bool lastInputBatch = false) const;
+      void compileOutputBatch(x86::Assembler& a, ActivationFunctionHandler& afHandler, const float* const input, const unsigned int remainingOutputs, const bool last = false) const;
+      void compileSimple(x86::Assembler& a, ActivationFunctionHandler& afHandler, const float* const input, const float* const output) const;
     };
   }
 }

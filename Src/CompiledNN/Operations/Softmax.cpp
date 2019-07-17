@@ -4,7 +4,7 @@
 
 #include "Softmax.h"
 #include "Platform/BHAssert.h"
-#include "../Util/ExpApprox.h"
+#include "Tools/NeuralNetwork/CompiledNN/Util/ExpApprox.h"
 #include <cmath>
 
 namespace NeuralNetwork
@@ -30,17 +30,17 @@ namespace NeuralNetwork
         vals[i] = *reinterpret_cast<const float*>(&offset);
     }
 
-    void SoftmaxCompiler::compile(X86Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void SoftmaxCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.dims() == output.dims());
       // TODO: Support for >1D tensors.
       ASSERT(input.rank() == 1);
 
       const bool isInplace = input.data() == output.data();
-      a.mov(a.zsi(), imm_ptr<const float*>(input.data()));
+      a.mov(a.zsi(), imm(input.data()));
 
       if(!isInplace)
-        a.mov(a.zdi(), imm_ptr<const float*>(output.data()));
+        a.mov(a.zdi(), imm(output.data()));
       else if(input.dims(0) >= 4 && (input.dims(0) % 4 != 0 || (input.dims(0) + 3) / 4 > settings.xmmRegs() - 3))
         a.mov(a.zdi(), a.zsi());
 
@@ -61,7 +61,7 @@ namespace NeuralNetwork
           Label loop;
           if(remainingChannels >= stepSize * 8)
           {
-            a.mov(a.zcx(), imm_u(remainingChannels / (stepSize * 4)));
+            a.mov(a.zcx(), imm(remainingChannels / (stepSize * 4)));
             loop = a.newLabel();
             a.bind(loop);
           }
@@ -71,7 +71,7 @@ namespace NeuralNetwork
             a.movaps(x86::xmm(i + 1), a.ptr_zsi(i * 4 * sizeof(float)));
 
           // Approximate exp(x)
-          std::vector<X86Xmm> valueRegs;
+          std::vector<x86::Xmm> valueRegs;
           for(unsigned int i = 0; i < stepSize; ++i)
             valueRegs.emplace_back(x86::xmm(i + 1));
           ExpApprox::apply(a, valueRegs, x86::xmm(settings.xmmRegs() - 2), x86::xmm(settings.xmmRegs() - 1));
@@ -103,9 +103,9 @@ namespace NeuralNetwork
           // Increment pointer if there will be further steps
           if(remainingChannels != stepSize * 4)
           {
-            a.add(a.zsi(), imm_u(stepSize * 4 * sizeof(float)));
+            a.add(a.zsi(), imm(stepSize * 4 * sizeof(float)));
             if(!isInplace)
-              a.add(a.zdi(), imm_u(stepSize * 4 * sizeof(float)));
+              a.add(a.zdi(), imm(stepSize * 4 * sizeof(float)));
           }
 
           // End loop if the stepsize can be applied multiple times
@@ -149,7 +149,7 @@ namespace NeuralNetwork
         a.rcpss(x86::xmm0, x86::xmm0);
 
       if(!isInplace && input.dims(0) >= 4 && (input.dims(0) % 4 != 0 || (input.dims(0) + 3) / 4 > settings.xmmRegs() - 3))
-        a.mov(a.zdi(), imm_ptr<const float*>(output.data()));
+        a.mov(a.zdi(), imm(output.data()));
 
       // Calculate softmax by dividing the exponentiated values by the computed sum
       remainingChannels = input.dims(0);
@@ -161,7 +161,7 @@ namespace NeuralNetwork
           Label loop;
           if(remainingChannels >= stepSize * 8)
           {
-            a.mov(a.zcx(), imm_u(remainingChannels / (stepSize * 4)));
+            a.mov(a.zcx(), imm(remainingChannels / (stepSize * 4)));
             loop = a.newLabel();
             a.bind(loop);
           }
@@ -179,7 +179,7 @@ namespace NeuralNetwork
 
           // Increment pointer if there will be further steps
           if(remainingChannels != stepSize * 4)
-            a.add(a.zdi(), imm_u(stepSize * 4 * sizeof(float)));
+            a.add(a.zdi(), imm(stepSize * 4 * sizeof(float)));
 
           // End loop if the stepsize can be applied multiple times
           if(remainingChannels >= stepSize * 8)

@@ -8,7 +8,7 @@
 - HDF5 (C bindings only)
 
 ## Compiling
-The easiest way to integrate CompiledNN is to add it (and its dependency AsmJit) as source files to your project.
+The easiest way to integrate CompiledNN is to add it (and its dependency [AsmJit](https://github.com/asmjit/asmjit)) as source files to your project.
 The included CMake file indicates which compiler options have to be set.
 
 ## Supported layers

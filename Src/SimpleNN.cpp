@@ -885,7 +885,7 @@ namespace NeuralNetwork
               providesInput = isInput ? 1 : -1;
             }
             else
-              ASSERT((providesInput) > 0 == isInput);
+              ASSERT(providesInput > 0 == isInput);
           }
           if(providesInput > 0)
             continue;
@@ -1040,8 +1040,7 @@ namespace NeuralNetwork
         decreaseRefCounters(node->inputs);
 
         // Remove this node from the list of remaining nodes.
-        std::remove(remainingNodes.begin(), remainingNodes.end(), node);
-        remainingNodes.pop_back();
+        remainingNodes.erase(std::remove(remainingNodes.begin(), remainingNodes.end(), node), remainingNodes.end());
       }
 
       // All outputs should be computed now.

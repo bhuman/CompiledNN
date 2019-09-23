@@ -1169,7 +1169,36 @@ namespace NeuralNetwork
     {
       hid_t layerGroup = H5Gopen2(modelWeightsGroup, layerName.c_str(), H5P_DEFAULT);
       ASSERT(layerGroup >= 0);
-      hid_t weightsGroup = H5Gopen2(layerGroup, layerName.c_str(), H5P_DEFAULT);
+
+      std::string mangledLayerName = layerName;
+      hid_t weightNamesAttribute = H5Aopen(layerGroup, "weight_names", H5P_DEFAULT);
+      ASSERT(weightNamesAttribute >= 0);
+      hid_t weightNamesAttributeType = H5Aget_type(weightNamesAttribute);
+      ASSERT(weightNamesAttributeType >= 0);
+      hsize_t weightNamesAttributeSize = H5Aget_storage_size(weightNamesAttribute);
+      ASSERT(weightNamesAttributeSize > 0);
+      std::vector<char> weightNamesBuf(static_cast<size_t>(weightNamesAttributeSize));
+      VERIFY(H5Aread(weightNamesAttribute, weightNamesAttributeType, weightNamesBuf.data()) >= 0);
+      size_t weightNameLength = H5Tget_size(weightNamesAttributeType);
+      ASSERT(weightNameLength > 0);
+      VERIFY(H5Tclose(weightNamesAttributeType) >= 0);
+      VERIFY(H5Aclose(weightNamesAttribute) >= 0);
+      for(size_t i = 0; i < static_cast<size_t>(weightNamesAttributeSize); i += weightNameLength)
+      {
+        // This string might end with multiple \0 due to the zero-padding in HDF5, but it does not matter since
+        // everything coming after the colon is irrelevant
+        const std::string currentWeightLayerName(weightNamesBuf.begin() + i, weightNamesBuf.begin() + i + weightNameLength);
+        auto posSlash = currentWeightLayerName.find('/');
+        auto posColon = currentWeightLayerName.find(':');
+        std::string currentWeightName = currentWeightLayerName.substr(posSlash + 1, posColon - posSlash - 1);
+        if(currentWeightName == weightName)
+        {
+          mangledLayerName = currentWeightLayerName.substr(0, posSlash);
+          break;
+        }
+      }
+
+      hid_t weightsGroup = H5Gopen2(layerGroup, mangledLayerName.c_str(), H5P_DEFAULT);
       ASSERT(weightsGroup >= 0);
       const std::string mangledWeightName = weightName + ":0"; // TODO: Is this always :0? We will see.
       hid_t weightsDataset = H5Dopen2(weightsGroup, mangledWeightName.c_str(), H5P_DEFAULT);

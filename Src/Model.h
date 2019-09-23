@@ -124,7 +124,7 @@ namespace NeuralNetwork
 
   public:
     Model() = default;
-    Model(const std::string& file) : Model() { loadKerasHDF5(file); }
+    Model(const std::string& file) : Model() { load(file); }
     ~Model()
     {
       layers.clear();
@@ -159,6 +159,15 @@ namespace NeuralNetwork
      * Removes all layers from this model.
      */
     void clear() { layers.clear(); inputs.clear(); outputs.clear(); uint8Inputs.clear(); }
+
+    /**
+     * Loads a neural network model from the given file, determining the file format from the file name.
+     * Only Keras HDF 5 is supported in this version.
+     */
+    void load(const std::string& file)
+    {
+      loadKerasHDF5(file);
+    }
 
     /**
      * Loads a neural network model from the given file in the native Keras HDF5 format.

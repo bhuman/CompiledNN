@@ -57,7 +57,7 @@ namespace NeuralNetwork
       }
       else
       {
-        const size_t maxConstantSpares = (p.negativeSlope != 0.f ? 1 : 0) + (p.negativeSlope != 0.f ? 1 : 0) + (p.maxValue != std::numeric_limits<float>::max() ? 1 : 0);
+        const size_t maxConstantSpares = (p.negativeSlope != 0.f ? 1 : 0) + (p.threshold != 0.f ? 1 : 0) + (p.maxValue != std::numeric_limits<float>::max() ? 1 : 0);
         for(size_t offset = 0, i = spares.size() <= maxConstantSpares ? 1 : spares.size() - maxConstantSpares; i < spares.size(); offset++, i++)
         {
           if(single)
@@ -96,7 +96,7 @@ namespace NeuralNetwork
       }
       else
       {
-        const size_t maxConstantSpares = (p.negativeSlope != 0.f ? 1 : 0) + (p.negativeSlope != 0.f ? 1 : 0) + (p.maxValue != std::numeric_limits<float>::max() ? 1 : 0);
+        const size_t maxConstantSpares = (p.negativeSlope != 0.f ? 1 : 0) + (p.threshold != 0.f ? 1 : 0) + (p.maxValue != std::numeric_limits<float>::max() ? 1 : 0);
         const size_t constantOffset = spares.size() <= maxConstantSpares ? 1 : spares.size() - maxConstantSpares;
 
         int thresholdOffset = -1;

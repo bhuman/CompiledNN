@@ -89,9 +89,9 @@ namespace NeuralNetwork
       const unsigned int verticalRemainder = node.inputDimensions[0][0] % strides[0];
       const unsigned int horizontalRemainder = node.inputDimensions[0][1] % strides[1];
       const unsigned int verticalPadding = std::max<int>(0, static_cast<int>(kernelSize[0]) -
-                                                            (verticalRemainder ? verticalRemainder : strides[0]));
+                                                         (verticalRemainder ? verticalRemainder : strides[0]));
       const unsigned int horizontalPadding = std::max<int>(0, static_cast<int>(kernelSize[1]) -
-                                                              (horizontalRemainder ? horizontalRemainder : strides[1]));
+                                                           (horizontalRemainder ? horizontalRemainder : strides[1]));
       if(!verticalPadding && !horizontalPadding)
         return nullptr;
 
@@ -720,7 +720,7 @@ namespace NeuralNetwork
             providesInput = isInput ? 1 : -1;
           }
           else
-            ASSERT((providesInput) > 0 == isInput);
+            ASSERT(providesInput > 0 == isInput);
         }
         if(providesInput > 0)
           continue;

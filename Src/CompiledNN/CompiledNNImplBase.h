@@ -11,7 +11,7 @@
 #include <vector>
 
 #ifdef NDEBUG
-#define CHECK_ASMJIT_ERROR ((void)0)
+#define CHECK_ASMJIT_ERROR static_cast<void>(0)
 #else
 #define CHECK_ASMJIT_ERROR \
   do { \

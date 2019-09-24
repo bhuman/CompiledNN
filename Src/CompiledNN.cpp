@@ -516,7 +516,7 @@ namespace NeuralNetwork
   {
     // Initialize assembler
     CodeHolder code;
-    code.init(asmjitRuntime.getCodeInfo());
+    code.init(asmjitRuntime.codeInfo());
     x86::Assembler a(&code);
     CompilationErrorHandler errorHandler;
     a.setErrorHandler(&errorHandler);

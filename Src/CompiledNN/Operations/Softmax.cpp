@@ -4,7 +4,7 @@
 
 #include "Softmax.h"
 #include "Platform/BHAssert.h"
-#include "Tools/NeuralNetwork/CompiledNN/Util/ExpApprox.h"
+#include "../Util/ExpApprox.h"
 #include <cmath>
 
 namespace NeuralNetwork

@@ -452,9 +452,12 @@ namespace NeuralNetwork
 
   std::unique_ptr<Layer> parseFlattenLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType&, unsigned long kerasVersion)
   {
-    const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
-    if(dataFormat != "channels_last")
-      FAIL("Data formats other than channels last are not supported.");
+    if(kerasVersion >= makeVersion(2, 1, 6))
+    {
+      const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
+      if(dataFormat != "channels_last")
+        FAIL("Data formats other than channels last are not supported.");
+    }
 
     return std::make_unique<FlattenLayer>();
   }
@@ -707,7 +710,7 @@ namespace NeuralNetwork
   {
     const SimpleMap::Array* size = getRecordEntry<SimpleMap::Array>(config, "size");
     const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
-    const std::string interpolation = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "interpolation"));
+    const std::string interpolation = kerasVersion >= makeVersion(2, 3, 0) ? getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "interpolation")) : std::string();
 
     if(dataFormat != "channels_last")
       FAIL("Data formats other than channels last are not supported.");
@@ -720,7 +723,7 @@ namespace NeuralNetwork
     std::unique_ptr<UpSampling2DLayer> layer = std::make_unique<UpSampling2DLayer>();
     layer->size[0] = sizeVertical;
     layer->size[1] = sizeHorizontal;
-    layer->interpolation = parseInterpolation(interpolation);
+    layer->interpolation = interpolation.empty() ? InterpolationMethod::nearest : parseInterpolation(interpolation);
     return layer;
   }
 
@@ -901,8 +904,8 @@ namespace NeuralNetwork
     const float maxValue = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "max_value")) == "None"
                            ? std::numeric_limits<float>::max()
                            : getLiteral<float>(getRecordEntry<SimpleMap::Literal>(config, "max_value"));
-    const float negativeSlope = getLiteral<float>(getRecordEntry<SimpleMap::Literal>(config, "negative_slope"));
-    const float threshold = getLiteral<float>(getRecordEntry<SimpleMap::Literal>(config, "threshold"));
+    const float negativeSlope = kerasVersion >= makeVersion(2, 2, 3) ? getLiteral<float>(getRecordEntry<SimpleMap::Literal>(config, "negative_slope")) : 0.f;
+    const float threshold = kerasVersion >= makeVersion(2, 2, 3) ? getLiteral<float>(getRecordEntry<SimpleMap::Literal>(config, "threshold")) : 0.f;
 
     std::unique_ptr<ReluLayer> layer = std::make_unique<ReluLayer>();
     layer->maxValue = maxValue;
@@ -962,14 +965,6 @@ namespace NeuralNetwork
     // FAILs are used if the model is valid, but uses a feature that is currently not supported.
     // Have fun eliminating all the FAILs ;-)
 
-    SimpleMap map(stream, fileName, /* jsonMode: */ true);
-    const SimpleMap::Record* root = dynamic_cast<const SimpleMap::Record*>(map.operator const SimpleMap::Value*());
-    ASSERT(root);
-    const SimpleMap::Record* config = getRecordEntry<SimpleMap::Record>(root, "config");
-    const SimpleMap::Array* layers = getRecordEntry<SimpleMap::Array>(config, "layers");
-    const SimpleMap::Array* inputLayers = getRecordEntry<SimpleMap::Array>(config, "input_layers");
-    const SimpleMap::Array* outputLayers = getRecordEntry<SimpleMap::Array>(config, "output_layers");
-
     using ParseLayerFuncType = std::unique_ptr<Layer>(*)(const SimpleMap::Record*, const GetWeights2FuncType&, unsigned long);
     std::unordered_map<std::string, ParseLayerFuncType> layerParsers;
     // Input
@@ -983,7 +978,8 @@ namespace NeuralNetwork
     // Convolutional layers
     layerParsers.emplace("Conv2D", &parseConv2DLayer);
     layerParsers.emplace("SeparableConv2D", &parseSeparableConv2DLayer);
-    layerParsers.emplace("DepthwiseConv2D", &parseDepthwiseConv2DLayer);
+    if(kerasVersion >= makeVersion(2, 1, 5))
+      layerParsers.emplace("DepthwiseConv2D", &parseDepthwiseConv2DLayer);
     layerParsers.emplace("Cropping2D", &parseCropping2DLayer);
     layerParsers.emplace("UpSampling2D", &parseUpSampling2DLayer);
     layerParsers.emplace("ZeroPadding2D", &parseZeroPadding2DLayer);
@@ -994,20 +990,125 @@ namespace NeuralNetwork
     layerParsers.emplace("GlobalAveragePooling2D", &parseGlobalAveragePooling2DLayer);
     // Merge layers
     layerParsers.emplace("Add", &parseAddLayer);
-    layerParsers.emplace("Subtract", &parseSubtractLayer);
+    if(kerasVersion >= makeVersion(2, 0, 7))
+      layerParsers.emplace("Subtract", &parseSubtractLayer);
     layerParsers.emplace("Multiply", &parseMultiplyLayer);
     layerParsers.emplace("Average", &parseAverageLayer);
     layerParsers.emplace("Maximum", &parseMaximumLayer);
-    layerParsers.emplace("Minimum", &parseMinimumLayer);
+    if(kerasVersion >= makeVersion(2, 0, 9))
+      layerParsers.emplace("Minimum", &parseMinimumLayer);
     layerParsers.emplace("Concatenate", &parseConcatenateLayer);
     // Advanced Activation layers
     layerParsers.emplace("LeakyReLU", &parseLeakyReluLayer);
     layerParsers.emplace("ELU", &parseEluLayer);
     layerParsers.emplace("ThresholdedReLU", &parseThresholdedReluLayer);
-    layerParsers.emplace("Softmax", &parseSoftmaxLayer);
-    layerParsers.emplace("ReLU", &parseReluLayer);
+    if(kerasVersion >= makeVersion(2, 1, 3))
+      layerParsers.emplace("Softmax", &parseSoftmaxLayer);
+    if(kerasVersion >= makeVersion(2, 2, 0))
+      layerParsers.emplace("ReLU", &parseReluLayer);
     // Normalization layers
     layerParsers.emplace("BatchNormalization", &parseBatchNormalizationLayer);
+
+    SimpleMap map(stream, fileName, /* jsonMode: */ true);
+    const SimpleMap::Record* root = dynamic_cast<const SimpleMap::Record*>(map.operator const SimpleMap::Value*());
+    ASSERT(root);
+
+    const std::string className = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(root, "class_name"));
+
+    // Sequential models are different from the general case and much simpler.
+    if(className == "Sequential")
+    {
+      const SimpleMap::Array* config = kerasVersion < makeVersion(2, 2, 3) ? getRecordEntry<SimpleMap::Array>(root, "config")
+                                                                           : getRecordEntry<SimpleMap::Array>(getRecordEntry<SimpleMap::Record>(root, "config"), "layers");
+      ASSERT(!config->empty());
+      for(const SimpleMap::Value* value : *config)
+      {
+        const SimpleMap::Record* layer = dynamic_cast<const SimpleMap::Record*>(value);
+        ASSERT(layer);
+
+        // A layer in a sequential model is an object with two members: class_name (a string, identifies the layer type)
+        // and config (an object with layer-specific parameters).
+        const std::string layerType = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(layer, "class_name"));
+
+        // Create a new layer with the parsing function for this type.
+        auto it = layerParsers.find(layerType);
+        if(it == layerParsers.end())
+          FAIL("The layer type \"" << layerType << "\" is currently not implemented.");
+
+        const SimpleMap::Record* layerConfig = getRecordEntry<SimpleMap::Record>(layer, "config");
+        // The name of the layer is also an attribute of the layer config.
+        const std::string name = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(layerConfig, "name"));
+        std::unique_ptr<Layer> newLayer = it->second(layerConfig,
+                                                     std::bind(getWeights, name, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+                                                     kerasVersion);
+
+        if(layers.empty() && newLayer->type != LayerType::input)
+        {
+          // Add an implicit input layer before the first layer.
+          // Its dimensions are given by the batch_input_shape attribute of the first actual layer.
+          const SimpleMap::Array* batchInputShape = getRecordEntry<SimpleMap::Array>(layerConfig, "batch_input_shape");
+          const std::string dtype = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(layerConfig, "dtype"));
+
+          if(dtype != "float32")
+            FAIL("The datatype of the model input must be float32.");
+          if(batchInputShape->size() < 2)
+            FAIL("The input of a model must have at least 1 dimension (excluding the batch axis).");
+          if(getLiteral<std::string>(getArrayEntry<SimpleMap::Literal>(batchInputShape, 0)) != "null")
+            FAIL("The batch axis must be null.");
+
+          std::unique_ptr<InputLayer> inputLayer = std::make_unique<InputLayer>();
+          inputLayer->dimensions.resize(batchInputShape->size() - 1);
+#ifndef NDEBUG
+          std::size_t outputSize = 1;
+#endif
+          for(std::size_t i = 0; i < batchInputShape->size() - 1; ++i)
+          {
+            inputLayer->dimensions[i] = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(batchInputShape, i + 1));
+#ifndef NDEBUG
+            outputSize *= inputLayer->dimensions[i];
+#endif
+          }
+          ASSERT(outputSize > 0);
+
+          inputLayer->nodes.emplace_back(inputLayer.get());
+          inputLayer->nodes.back().outputDimensions.push_back(inputLayer->dimensions);
+          inputLayer->nodes.back().outputs.emplace_back(inputLayer.get(), 0, 0);
+          layers.push_back(std::move(inputLayer));
+        }
+        else
+          ASSERT(layers.empty() || newLayer->type != LayerType::input);
+
+        // Input layers already have a node. For all others, a single node is created.
+        if(newLayer->type != LayerType::input)
+        {
+          ASSERT(!layers.empty());
+          ASSERT(layers.back()->nodes.size() == 1);
+          ASSERT(layers.back()->nodes[0].outputDimensions.size() == 1);
+          newLayer->nodes.emplace_back(newLayer.get());
+          Node& node = newLayer->nodes.back();
+          node.inputs.emplace_back(layers.back().get(), 0, 0);
+          node.setDimensions();
+          node.outputs.emplace_back(newLayer.get(), 0, 0);
+        }
+
+        layers.push_back(std::move(newLayer));
+      }
+
+      // Set input and output tensors.
+      ASSERT(!layers.empty());
+      inputs.emplace_back(layers.front().get(), 0, 0);
+      outputs.emplace_back(layers.back().get(), 0, 0);
+
+      return;
+    }
+
+    ASSERT(className == "Model"); // Model subclassing will probably never be supported.
+
+    // Here we are in the functional (`Model`) case again.
+    const SimpleMap::Record* config = getRecordEntry<SimpleMap::Record>(root, "config");
+    const SimpleMap::Array* layers = getRecordEntry<SimpleMap::Array>(config, "layers");
+    const SimpleMap::Array* inputLayers = getRecordEntry<SimpleMap::Array>(config, "input_layers");
+    const SimpleMap::Array* outputLayers = getRecordEntry<SimpleMap::Array>(config, "output_layers");
 
     // This code is very much inspired by the original keras `Network.from_config` method:
     // https://github.com/keras-team/keras/blob/d78c982b326adeed6ac25200dc6892ff8f518ca6/keras/engine/network.py#L933

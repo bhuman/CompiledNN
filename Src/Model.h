@@ -120,7 +120,7 @@ namespace NeuralNetwork
     /**
      * Parses a model from a JSON description.
      */
-    void parseJSONModel(In& stream, const std::string& fileName, const GetWeightsFuncType& getWeights);
+    void parseJSONModel(In& stream, const std::string& fileName, const GetWeightsFuncType& getWeights, unsigned long kerasVersion);
 
   public:
     Model() = default;

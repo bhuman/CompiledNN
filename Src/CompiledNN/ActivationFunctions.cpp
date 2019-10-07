@@ -1073,6 +1073,7 @@ namespace NeuralNetwork
             single ? seluInitialize<true> : seluInitialize<false>,
             single ? seluApply<true> : seluApply<false>
           );
+          break;
         case CompiledActivationFunctionId::exponential:
           functionData.emplace_back(
             desc, single,
@@ -1080,6 +1081,7 @@ namespace NeuralNetwork
             single ? exponentialInitialize<true> : exponentialInitialize<false>,
             single ? exponentialApply<true> : exponentialApply<false>
           );
+          break;
         case CompiledActivationFunctionId::softsign:
           functionData.emplace_back(
             desc, single,

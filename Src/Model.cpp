@@ -402,7 +402,9 @@ namespace NeuralNetwork
 
   std::unique_ptr<Layer> parseDenseLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType& getWeights)
   {
+#ifndef NDEBUG
     const unsigned int units = getLiteral<unsigned int>(getRecordEntry<SimpleMap::Literal>(config, "units"));
+#endif
     const std::string activation = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "activation"));
     const bool useBias = getLiteral<bool>(getRecordEntry<SimpleMap::Literal>(config, "use_bias"));
 
@@ -479,8 +481,10 @@ namespace NeuralNetwork
 
   std::unique_ptr<Layer> parseConv2DLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType& getWeights)
   {
+#ifndef NDEBUG
     const unsigned int filters = getLiteral<unsigned int>(getRecordEntry<SimpleMap::Literal>(config, "filters"));
     const SimpleMap::Array* kernelSize = getRecordEntry<SimpleMap::Array>(config, "kernel_size");
+#endif
     const SimpleMap::Array* strides = getRecordEntry<SimpleMap::Array>(config, "strides");
     const std::string padding = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "padding"));
     const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
@@ -497,8 +501,10 @@ namespace NeuralNetwork
     if(getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(dilationRate, 0)) != 1 ||
        getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(dilationRate, 1)) != 1)
       FAIL("Conv2D layers with a dilation rate other than (1, 1) are currently not supported.");
+#ifndef NDEBUG
     const unsigned int kernelHeight = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(kernelSize, 0));
     const unsigned int kernelWidth = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(kernelSize, 1));
+#endif
     const unsigned int strideVertical = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(strides, 0));
     const unsigned int strideHorizontal = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(strides, 1));
     ASSERT(kernelHeight > 0);
@@ -535,13 +541,17 @@ namespace NeuralNetwork
 
   std::unique_ptr<Layer> parseSeparableConv2DLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType& getWeights)
   {
+#ifndef NDEBUG
     const unsigned int filters = getLiteral<unsigned int>(getRecordEntry<SimpleMap::Literal>(config, "filters"));
     const SimpleMap::Array* kernelSize = getRecordEntry<SimpleMap::Array>(config, "kernel_size");
+#endif
     const SimpleMap::Array* strides = getRecordEntry<SimpleMap::Array>(config, "strides");
     const std::string padding = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "padding"));
     const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
     const SimpleMap::Array* dilationRate = getRecordEntry<SimpleMap::Array>(config, "dilation_rate");
+#ifndef NDEBUG
     const unsigned int depthMultiplier = getLiteral<unsigned int>(getRecordEntry<SimpleMap::Literal>(config, "depth_multiplier"));
+#endif
     const std::string activation = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "activation"));
     const bool useBias = getLiteral<bool>(getRecordEntry<SimpleMap::Literal>(config, "use_bias"));
 
@@ -555,8 +565,10 @@ namespace NeuralNetwork
     if(getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(dilationRate, 0)) != 1 ||
        getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(dilationRate, 1)) != 1)
       FAIL("SeparableConv2D layers with a dilation rate other than (1, 1) are currently not supported.");
+#ifndef NDEBUG
     const unsigned int kernelHeight = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(kernelSize, 0));
     const unsigned int kernelWidth = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(kernelSize, 1));
+#endif
     const unsigned int strideVertical = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(strides, 0));
     const unsigned int strideHorizontal = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(strides, 1));
     ASSERT(kernelHeight > 0);
@@ -601,12 +613,16 @@ namespace NeuralNetwork
 
   std::unique_ptr<Layer> parseDepthwiseConv2DLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType& getWeights)
   {
+#ifndef NDEBUG
     const SimpleMap::Array* kernelSize = getRecordEntry<SimpleMap::Array>(config, "kernel_size");
+#endif
     const SimpleMap::Array* strides = getRecordEntry<SimpleMap::Array>(config, "strides");
     const std::string padding = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "padding"));
     const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
     const SimpleMap::Array* dilationRate = getRecordEntry<SimpleMap::Array>(config, "dilation_rate");
+#ifndef NDEBUG
     const unsigned int depthMultiplier = getLiteral<unsigned int>(getRecordEntry<SimpleMap::Literal>(config, "depth_multiplier"));
+#endif
     const std::string activation = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "activation"));
     const bool useBias = getLiteral<bool>(getRecordEntry<SimpleMap::Literal>(config, "use_bias"));
 
@@ -619,8 +635,10 @@ namespace NeuralNetwork
     if(getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(dilationRate, 0)) != 1 ||
        getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(dilationRate, 1)) != 1)
       FAIL("DepthwiseConv2D layers with a dilation rate other than (1, 1) are currently not supported.");
+#ifndef NDEBUG
     const unsigned int kernelHeight = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(kernelSize, 0));
     const unsigned int kernelWidth = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(kernelSize, 1));
+#endif
     const unsigned int strideVertical = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(strides, 0));
     const unsigned int strideHorizontal = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(strides, 1));
     ASSERT(kernelHeight > 0);

@@ -595,8 +595,7 @@ namespace NeuralNetwork
       }
 
     // Bind function
-    const ErrorCode err = static_cast<ErrorCode>(asmjitRuntime.add<FnType>(&applyFunction, &code));
-    ASSERT(err == ErrorCode::kErrorOk);
+    VERIFY(static_cast<ErrorCode>(asmjitRuntime.add<FnType>(&applyFunction, &code)) == ErrorCode::kErrorOk);
   }
 
   void CompiledNN::compilerBackend(std::list<Operation>& operations, const CompilerMap& compilers,

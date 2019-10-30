@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-project(CompiledNN)
+cmake_minimum_required(VERSION 3.15)
+project(CompiledNN LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -162,6 +162,13 @@ add_library(CompiledNN STATIC
     3rdParty/B-Human/Tools/Streams/SimpleMap.h
 )
 
+target_compile_options(CompiledNN PRIVATE
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wall>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wextra>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-fno-strict-aliasing>
+    $<$<CXX_COMPILER_ID:MSVC>:/W3>
+)
 target_include_directories(CompiledNN PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Src")
 target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/B-Human")
 target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src")

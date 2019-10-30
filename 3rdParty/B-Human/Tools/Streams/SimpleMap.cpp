@@ -154,7 +154,7 @@ void SimpleMap::nextSymbol()
         }
         string = "/";
         // no break;
-
+      [[fallthrough]];
       default:
         while(c && !isspace(c) && c != '=' && c != ',' && c != ';' && c != ']' && c != '}')
         {

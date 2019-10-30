@@ -719,7 +719,7 @@ namespace NeuralNetwork
             providesInput = isInput ? 1 : -1;
           }
           else
-            ASSERT(providesInput > 0 == isInput);
+            ASSERT((providesInput > 0) == isInput);
         }
         if(providesInput > 0)
           continue;

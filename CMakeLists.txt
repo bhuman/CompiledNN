@@ -26,10 +26,6 @@ add_library(CompiledNN STATIC
     Src/CompiledNN/Operations/UpSampling2D.cpp
     Src/CompiledNN/Operations/ZeroPadding2D.cpp
     Src/CompiledNN/Util/ExpApprox.cpp
-    Src/Platform/BHAssert.cpp
-    Src/Tools/Streams/InOut.cpp
-    Src/Tools/Streams/InStreams.cpp
-    Src/Tools/Streams/SimpleMap.cpp
 
     3rdParty/asmjit/src/asmjit/core/arch.cpp
     3rdParty/asmjit/src/asmjit/core/assembler.cpp
@@ -73,14 +69,18 @@ add_library(CompiledNN STATIC
     3rdParty/asmjit/src/asmjit/x86/x86logging.cpp
     3rdParty/asmjit/src/asmjit/x86/x86operand.cpp
     3rdParty/asmjit/src/asmjit/x86/x86rapass.cpp
+
+    3rdParty/B-Human/Platform/BHAssert.cpp
+    3rdParty/B-Human/Tools/Streams/InOut.cpp
+    3rdParty/B-Human/Tools/Streams/InStreams.cpp
+    3rdParty/B-Human/Tools/Streams/SimpleMap.cpp
 )
 
 target_include_directories(CompiledNN PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Src")
+target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/B-Human")
 target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src")
 target_compile_definitions(CompiledNN PRIVATE ASMJIT_STATIC ASMJIT_BUILD_X86 ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
     ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_INST_API)
-    
-    
 
 find_package(HDF5 REQUIRED)
 target_link_libraries(CompiledNN PRIVATE ${HDF5_C_LIBRARIES})

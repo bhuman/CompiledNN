@@ -167,6 +167,7 @@ target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR
 target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src")
 target_compile_definitions(CompiledNN PRIVATE ASMJIT_STATIC ASMJIT_BUILD_X86 ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
     ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_INST_API)
+target_link_libraries(CompiledNN PUBLIC $<$<PLATFORM_ID:Linux>:pthread> $<$<PLATFORM_ID:Linux>:rt>)
 
 find_package(HDF5 REQUIRED)
 target_link_libraries(CompiledNN PRIVATE ${HDF5_C_LIBRARIES})

@@ -6,50 +6,50 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(CompiledNN STATIC
-    Src/CompiledNN.cpp
-    Src/CompiledNN.h
-    Src/Model.cpp
-    Src/Model.h
-    Src/SimpleNN.cpp
-    Src/SimpleNN.h
-    Src/Tensor.h
-    Src/CompiledNN/ActivationFunctions.cpp
-    Src/CompiledNN/ActivationFunctions.h
-    Src/CompiledNN/CompilationSettings.cpp
-    Src/CompiledNN/CompilationSettings.h
-    Src/CompiledNN/CompiledNNImpl.h
-    Src/CompiledNN/CompiledNNImplBase.h
-    Src/CompiledNN/TensorPointer.h
-    Src/CompiledNN/Operations/Activation.cpp
-    Src/CompiledNN/Operations/Activation.h
-    Src/CompiledNN/Operations/Arithmetic.cpp
-    Src/CompiledNN/Operations/Arithmetic.h
-    Src/CompiledNN/Operations/BatchNormalization.cpp
-    Src/CompiledNN/Operations/BatchNormalization.h
-    Src/CompiledNN/Operations/Concatenate.cpp
-    Src/CompiledNN/Operations/Concatenate.h
-    Src/CompiledNN/Operations/Conv2D.cpp
-    Src/CompiledNN/Operations/Conv2D.h
-    Src/CompiledNN/Operations/Cropping2D.cpp
-    Src/CompiledNN/Operations/Cropping2D.h
-    Src/CompiledNN/Operations/DConv2D.cpp
-    Src/CompiledNN/Operations/DConv2D.h
-    Src/CompiledNN/Operations/Dense.cpp
-    Src/CompiledNN/Operations/Dense.h
-    Src/CompiledNN/Operations/GlobalPooling2D.cpp
-    Src/CompiledNN/Operations/GlobalPooling2D.h
-    Src/CompiledNN/Operations/Pooling2D.cpp
-    Src/CompiledNN/Operations/Pooling2D.h
-    Src/CompiledNN/Operations/Softmax.cpp
-    Src/CompiledNN/Operations/Softmax.h
-    Src/CompiledNN/Operations/UInt8Input.cpp
-    Src/CompiledNN/Operations/UInt8Input.h
-    Src/CompiledNN/Operations/UpSampling2D.cpp
-    Src/CompiledNN/Operations/UpSampling2D.h
-    Src/CompiledNN/Operations/ZeroPadding2D.cpp
-    Src/CompiledNN/Operations/ZeroPadding2D.h
-    Src/CompiledNN/Util/ExpApprox.cpp
-    Src/CompiledNN/Util/ExpApprox.h
+    Src/CompiledNN/CompiledNN.cpp
+    Src/CompiledNN/CompiledNN.h
+    Src/CompiledNN/Model.cpp
+    Src/CompiledNN/Model.h
+    Src/CompiledNN/SimpleNN.cpp
+    Src/CompiledNN/SimpleNN.h
+    Src/CompiledNN/Tensor.h
+    Src/CompiledNN/CompiledNN/ActivationFunctions.cpp
+    Src/CompiledNN/CompiledNN/ActivationFunctions.h
+    Src/CompiledNN/CompiledNN/CompilationSettings.cpp
+    Src/CompiledNN/CompiledNN/CompilationSettings.h
+    Src/CompiledNN/CompiledNN/CompiledNNImpl.h
+    Src/CompiledNN/CompiledNN/CompiledNNImplBase.h
+    Src/CompiledNN/CompiledNN/TensorPointer.h
+    Src/CompiledNN/CompiledNN/Operations/Activation.cpp
+    Src/CompiledNN/CompiledNN/Operations/Activation.h
+    Src/CompiledNN/CompiledNN/Operations/Arithmetic.cpp
+    Src/CompiledNN/CompiledNN/Operations/Arithmetic.h
+    Src/CompiledNN/CompiledNN/Operations/BatchNormalization.cpp
+    Src/CompiledNN/CompiledNN/Operations/BatchNormalization.h
+    Src/CompiledNN/CompiledNN/Operations/Concatenate.cpp
+    Src/CompiledNN/CompiledNN/Operations/Concatenate.h
+    Src/CompiledNN/CompiledNN/Operations/Conv2D.cpp
+    Src/CompiledNN/CompiledNN/Operations/Conv2D.h
+    Src/CompiledNN/CompiledNN/Operations/Cropping2D.cpp
+    Src/CompiledNN/CompiledNN/Operations/Cropping2D.h
+    Src/CompiledNN/CompiledNN/Operations/DConv2D.cpp
+    Src/CompiledNN/CompiledNN/Operations/DConv2D.h
+    Src/CompiledNN/CompiledNN/Operations/Dense.cpp
+    Src/CompiledNN/CompiledNN/Operations/Dense.h
+    Src/CompiledNN/CompiledNN/Operations/GlobalPooling2D.cpp
+    Src/CompiledNN/CompiledNN/Operations/GlobalPooling2D.h
+    Src/CompiledNN/CompiledNN/Operations/Pooling2D.cpp
+    Src/CompiledNN/CompiledNN/Operations/Pooling2D.h
+    Src/CompiledNN/CompiledNN/Operations/Softmax.cpp
+    Src/CompiledNN/CompiledNN/Operations/Softmax.h
+    Src/CompiledNN/CompiledNN/Operations/UInt8Input.cpp
+    Src/CompiledNN/CompiledNN/Operations/UInt8Input.h
+    Src/CompiledNN/CompiledNN/Operations/UpSampling2D.cpp
+    Src/CompiledNN/CompiledNN/Operations/UpSampling2D.h
+    Src/CompiledNN/CompiledNN/Operations/ZeroPadding2D.cpp
+    Src/CompiledNN/CompiledNN/Operations/ZeroPadding2D.h
+    Src/CompiledNN/CompiledNN/Util/ExpApprox.cpp
+    Src/CompiledNN/CompiledNN/Util/ExpApprox.h
 
     3rdParty/asmjit/src/asmjit/asmjit.h
     3rdParty/asmjit/src/asmjit/core.h
@@ -170,10 +170,10 @@ target_compile_options(CompiledNN PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W3>
 )
 target_include_directories(CompiledNN PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Src")
-target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/B-Human")
+target_include_directories(CompiledNN SYSTEM PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/B-Human")
 target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src")
 target_compile_definitions(CompiledNN PRIVATE ASMJIT_STATIC ASMJIT_BUILD_X86 ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
-    ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_INST_API)
+    ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_VALIDATION ASMJIT_NO_INTROSPECTION)
 target_link_libraries(CompiledNN PUBLIC $<$<PLATFORM_ID:Linux>:pthread> $<$<PLATFORM_ID:Linux>:rt>)
 
 find_package(HDF5 REQUIRED)

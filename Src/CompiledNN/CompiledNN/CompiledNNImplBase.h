@@ -30,7 +30,7 @@ namespace NeuralNetwork
 
     class ActivationFunctionHandler;
 
-    struct NetworkConstants
+    struct NetworkConstants final
     {
       Label label;
       std::vector<float> data;

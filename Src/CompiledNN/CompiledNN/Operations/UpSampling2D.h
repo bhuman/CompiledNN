@@ -12,7 +12,7 @@ namespace NeuralNetwork
   {
     struct UpSampling2DCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         std::array<unsigned int, 2> size;
         InterpolationMethod method;

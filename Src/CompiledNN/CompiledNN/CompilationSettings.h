@@ -6,7 +6,7 @@
 
 namespace NeuralNetwork
 {
-  struct CompilationSettings
+  struct CompilationSettings final
   {
     // CPU features
     bool useX64 = true;    /**< use x64 features (additional XMM registers) */

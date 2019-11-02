@@ -12,7 +12,7 @@ namespace NeuralNetwork
   {
     struct Pooling2DCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         std::array<unsigned int, 2> kernelSize;
         std::array<unsigned int, 2> strides;

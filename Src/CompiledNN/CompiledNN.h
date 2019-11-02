@@ -19,6 +19,11 @@
 #include <unordered_map>
 #include <vector>
 
+namespace asmjit
+{
+  class JitRuntime;
+}
+
 namespace NeuralNetwork
 {
   struct Model;
@@ -34,7 +39,7 @@ namespace NeuralNetwork
    * A class that compiles neural networks into optimized X86 machine code and
    * applies them on input data.
    */
-  class CompiledNN
+  class CompiledNN final
   {
   private:
     struct Operation;
@@ -42,7 +47,7 @@ namespace NeuralNetwork
     using CompilerList = std::vector<std::unique_ptr<CompiledNNImpl::OperationCompiler>>;
     using CompilerMap = std::unordered_map<std::type_index, CompilerList>;
 
-    struct TensorLocationHasher
+    struct TensorLocationHasher final
     {
       std::size_t operator()(const TensorLocation& tl) const
       {
@@ -51,7 +56,7 @@ namespace NeuralNetwork
       }
     };
 
-    struct OperandLocation
+    struct OperandLocation final
     {
       Operation* provider;
       unsigned int tensorIndex;
@@ -64,7 +69,7 @@ namespace NeuralNetwork
       }
     };
 
-    struct OperandPlaceholder
+    struct OperandPlaceholder final
     {
       OperandLocation location;
       std::size_t requiredSize;
@@ -76,7 +81,7 @@ namespace NeuralNetwork
       {}
     };
 
-    struct Operation
+    struct Operation final
     {
       const CompiledNNImpl::OperationCompiler* compiler;
       std::vector<OperandLocation> inputs;
@@ -128,9 +133,11 @@ namespace NeuralNetwork
     std::vector<TensorXf*> inputTensors, outputTensors;
     std::vector<std::vector<unsigned int>> inputDimensions, outputDimensions;
     std::vector<TensorXf> tensors;
+    std::unique_ptr<asmjit::JitRuntime> runtime;
+    bool externalRuntime;
 
   public:
-    CompiledNN() = default;
+    explicit CompiledNN(asmjit::JitRuntime* runtime = nullptr);
     ~CompiledNN();
 
     /**

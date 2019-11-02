@@ -12,7 +12,7 @@ namespace NeuralNetwork
   {
     struct DConv2DCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         const Tensor<float, 1>* weights;
         std::array<unsigned int, 2> strides;

@@ -58,7 +58,7 @@ namespace NeuralNetwork
   /**
    * A struct that describes the location of a tensor in a network.
    */
-  struct TensorLocation
+  struct TensorLocation final
   {
     const Layer* layer;
     unsigned int nodeIndex;
@@ -75,7 +75,7 @@ namespace NeuralNetwork
   /**
    * A struct that describes a node in a network, i.e. an instance of a layer with known inputs and outputs.
    */
-  struct Node
+  struct Node final
   {
     const Layer* const layer;
     std::vector<TensorLocation> inputs;
@@ -104,7 +104,7 @@ namespace NeuralNetwork
   /**
    * A struct that describes a neural network model.
    */
-  struct Model
+  struct Model final
   {
     /// getWeights with layer name as first parameter
     using GetWeightsFuncType = std::function<void(const std::string&, const std::string&, std::vector<float>&, std::vector<unsigned int>&)>;

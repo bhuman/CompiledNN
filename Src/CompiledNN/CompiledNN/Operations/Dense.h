@@ -14,7 +14,7 @@ namespace NeuralNetwork
   {
     struct DenseCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         // Order of operations:
         // preBatchNormalization -> Dense -> activationDesc -> postBatchNormalization -> postActivation

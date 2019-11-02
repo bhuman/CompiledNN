@@ -12,7 +12,7 @@ namespace NeuralNetwork
   {
     struct SoftmaxCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         unsigned int dimension;
       };

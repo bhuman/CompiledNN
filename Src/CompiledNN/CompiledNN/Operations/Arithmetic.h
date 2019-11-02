@@ -21,7 +21,7 @@ namespace NeuralNetwork
         max,
         min
       };
-      struct Parameters
+      struct Parameters final
       {
         unsigned int inputSize = 0;
         OperationType op;

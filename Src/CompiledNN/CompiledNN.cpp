@@ -13,17 +13,23 @@
 #include <numeric>
 #include <unordered_map>
 
-thread_local static asmjit::JitRuntime asmjitRuntime;
-
 namespace NeuralNetwork
 {
   using namespace asmjit;
   using namespace CompiledNNImpl;
 
+  CompiledNN::CompiledNN(asmjit::JitRuntime* runtime) :
+    runtime(runtime ? std::unique_ptr<asmjit::JitRuntime>(runtime) : std::make_unique<asmjit::JitRuntime>()),
+    externalRuntime(runtime)
+  {
+  }
+
   CompiledNN::~CompiledNN()
   {
     if(applyFunction)
-      asmjitRuntime.release(applyFunction);
+      runtime->release(applyFunction);
+    if(externalRuntime)
+      static_cast<void>(runtime.release());
   }
 
   template<typename CompilerType>
@@ -516,7 +522,7 @@ namespace NeuralNetwork
   {
     // Initialize assembler
     CodeHolder code;
-    code.init(asmjitRuntime.codeInfo());
+    code.init(runtime->codeInfo());
     x86::Assembler a(&code);
     CompilationErrorHandler errorHandler;
     a.setErrorHandler(&errorHandler);
@@ -595,7 +601,7 @@ namespace NeuralNetwork
       }
 
     // Bind function
-    VERIFY(static_cast<ErrorCode>(asmjitRuntime.add<FnType>(&applyFunction, &code)) == ErrorCode::kErrorOk);
+    VERIFY(static_cast<ErrorCode>(runtime->add<FnType>(&applyFunction, &code)) == ErrorCode::kErrorOk);
   }
 
   void CompiledNN::compilerBackend(std::list<Operation>& operations, const CompilerMap& compilers,
@@ -641,7 +647,7 @@ namespace NeuralNetwork
     // Reset attributes
     if(applyFunction)
     {
-      asmjitRuntime.release(applyFunction);
+      runtime->release(applyFunction);
       applyFunction = nullptr;
     }
 
@@ -874,7 +880,7 @@ namespace NeuralNetwork
     // Reset attributes
     if(applyFunction)
     {
-      asmjitRuntime.release(applyFunction);
+      runtime->release(applyFunction);
       applyFunction = nullptr;
     }
 

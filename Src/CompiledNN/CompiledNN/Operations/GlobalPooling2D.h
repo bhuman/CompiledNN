@@ -12,7 +12,7 @@ namespace NeuralNetwork
   {
     struct GlobalPooling2DCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         PoolingMethod method;
         unsigned int imageSize = 0;

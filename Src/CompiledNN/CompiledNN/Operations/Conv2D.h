@@ -14,7 +14,7 @@ namespace NeuralNetwork
   {
     struct Conv2DCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         const BatchNormalizationCompiler::Parameters* batchNormalization = nullptr;
         const Tensor<float, 1>* weights;

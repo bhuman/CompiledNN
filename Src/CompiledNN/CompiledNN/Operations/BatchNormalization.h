@@ -12,7 +12,7 @@ namespace NeuralNetwork
   {
     struct BatchNormalizationCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         const std::vector<float>* factor;
         const std::vector<float>* offset;

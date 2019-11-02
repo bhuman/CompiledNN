@@ -13,7 +13,7 @@ namespace NeuralNetwork
   {
     struct ActivationCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         ActivationFunctionDescriptor activationDesc;
       };

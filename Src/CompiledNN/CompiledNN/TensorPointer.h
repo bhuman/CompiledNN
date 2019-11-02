@@ -18,7 +18,7 @@ namespace NeuralNetwork
    * Actually only a container for a data pointer and its dimensions.
    */
   template<typename T = float>
-  class TensorPointer
+  class TensorPointer final
   {
   private:
     std::vector<unsigned int> dimensions;

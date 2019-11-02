@@ -12,7 +12,7 @@ namespace NeuralNetwork
   {
     struct ConcatenateCompiler : public OperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         unsigned int dimension;
       };

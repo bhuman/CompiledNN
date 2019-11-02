@@ -73,7 +73,7 @@ namespace NeuralNetwork
       }
     };
 
-    struct ActivationFunctionDescriptor
+    struct ActivationFunctionDescriptor final
     {
       const CompiledActivationFunctionId id;
       const ActivationFunctionParameters* const p;
@@ -144,7 +144,7 @@ namespace NeuralNetwork
       }
     };
 
-    class ActivationFn
+    class ActivationFn final
     {
     private:
       using DefineDataFnType = std::function<void(std::vector<float>&, const ActivationFunctionParameters* const)>;
@@ -187,14 +187,14 @@ namespace NeuralNetwork
       inline void apply(x86::Assembler& a) { applyFn(a, desc.p, constants.label, spares, values); }
     };
 
-    class ActivationFunctionHandler
+    class ActivationFunctionHandler final
     {
     private:
       using DefineDataFnType = ActivationFn::DefineDataFnType;
       using InitializeFnType = ActivationFn::InitializeFnType;
       using ApplyFnType = ActivationFn::ApplyFnType;
 
-      struct ActivationData
+      struct ActivationData final
       {
         const ActivationFunctionDescriptor desc;
         const bool single;

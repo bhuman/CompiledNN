@@ -21,7 +21,7 @@ namespace NeuralNetwork
    * A class for storing a n-dimensional tensor.
    */
   template<typename T = float, std::size_t alignment = 16>
-  class Tensor
+  class Tensor final
   {
     static_assert(alignment == 1 || alignment == 2 || alignment == 4 || alignment == 8 || alignment == 16 || alignment == 32 || alignment == 64, "Alignment must be 2^n, n in [0..6].");
 

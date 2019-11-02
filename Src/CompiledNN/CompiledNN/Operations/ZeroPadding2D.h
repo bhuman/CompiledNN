@@ -12,7 +12,7 @@ namespace NeuralNetwork
   {
     struct ZeroPadding2DCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         std::array<unsigned int, 4> padding;
       };

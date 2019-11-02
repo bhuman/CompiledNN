@@ -13,7 +13,7 @@ namespace NeuralNetwork
   {
     struct UInt8InputCompiler : public SISOOperationCompiler
     {
-      struct Parameters
+      struct Parameters final
       {
         const BatchNormalizationCompiler::Parameters* batchNormalization = nullptr;
       };

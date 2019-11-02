@@ -14,6 +14,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <mutex>
 #include <numeric>
 #include <utility>
 
@@ -1258,6 +1259,10 @@ namespace NeuralNetwork
   void Model::loadKerasHDF5(const std::string& filename)
   {
     clear();
+
+    // HDF5 is not necessarily thread-safe.
+    static std::mutex hdf5Mutex;
+    std::lock_guard<std::mutex> lg(hdf5Mutex);
 
     H5dont_atexit();
     hid_t rootGroup = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);

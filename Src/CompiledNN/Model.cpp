@@ -1406,5 +1406,6 @@ namespace NeuralNetwork
     VERIFY(H5Tclose(floatDatatype) >= 0);
     VERIFY(H5Tclose(variableLengthStringDatatype) >= 0);
     VERIFY(H5Fclose(rootGroup) >= 0);
+    VERIFY(H5close() >= 0);
   }
 }

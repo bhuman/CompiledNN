@@ -1,4 +1,5 @@
 # CompiledNN: A JIT Compiler for Neural Network Inference
+[![Build Status](https://travis-ci.org/bhuman/CompiledNN.svg?branch=master)](https://travis-ci.org/bhuman/CompiledNN)
 
 ## Features
 - compiles Keras HDF5 models into machine code

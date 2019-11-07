@@ -38,6 +38,8 @@ add_library(CompiledNN STATIC
     Src/CompiledNN/CompiledNN/Operations/Dense.h
     Src/CompiledNN/CompiledNN/Operations/GlobalPooling2D.cpp
     Src/CompiledNN/CompiledNN/Operations/GlobalPooling2D.h
+    Src/CompiledNN/CompiledNN/Operations/Im2Col2D.cpp
+    Src/CompiledNN/CompiledNN/Operations/Im2Col2D.h
     Src/CompiledNN/CompiledNN/Operations/Pooling2D.cpp
     Src/CompiledNN/CompiledNN/Operations/Pooling2D.h
     Src/CompiledNN/CompiledNN/Operations/Softmax.cpp

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 project(CompiledNN LANGUAGES C CXX)
 
+option(WITH_APPLICATIONS "Build applications." OFF)
+option(WITH_TESTS "Build tests." OFF)
+option(WITH_COVERAGE "Enable coverage." OFF)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -171,6 +175,16 @@ target_compile_options(CompiledNN PRIVATE
     $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-fno-strict-aliasing>
     $<$<CXX_COMPILER_ID:MSVC>:/W3>
 )
+if(WITH_COVERAGE)
+  target_compile_options(CompiledNN PUBLIC
+      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fprofile-instr-generate>
+      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fcoverage-mapping>)
+  target_link_options(CompiledNN PUBLIC
+      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fprofile-instr-generate>
+      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fcoverage-mapping>)
+  target_compile_options(CompiledNN PUBLIC $<$<CXX_COMPILER_ID:GNU>:--coverage>)
+  target_link_options(CompiledNN PUBLIC $<$<CXX_COMPILER_ID:GNU>:--coverage>)
+endif()
 target_include_directories(CompiledNN PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Src")
 target_include_directories(CompiledNN SYSTEM PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/B-Human")
 target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src")
@@ -183,8 +197,25 @@ target_link_libraries(CompiledNN PRIVATE ${HDF5_C_LIBRARIES})
 target_include_directories(CompiledNN SYSTEM PRIVATE ${HDF5_C_INCLUDE_DIRS})
 target_compile_definitions(CompiledNN PRIVATE ${HDF5_C_DEFINITIONS})
 
-add_executable(Benchmark Tests/Benchmark.cpp)
-target_link_libraries(Benchmark PRIVATE CompiledNN)
+if(WITH_APPLICATIONS)
+  add_executable(Benchmark Tests/Benchmark.cpp)
+  target_link_libraries(Benchmark PRIVATE CompiledNN)
 
-add_executable(Check Tests/Check.cpp)
-target_link_libraries(Check PRIVATE CompiledNN)
+  add_executable(Check Tests/Check.cpp)
+  target_link_libraries(Check PRIVATE CompiledNN)
+endif()
+
+if(WITH_TESTS)
+  find_package(GTest)
+
+  if(GTEST_FOUND)
+    enable_testing()
+
+    add_executable(LayerTests
+        Tests/Layers/UpSampling2D.cpp
+    )
+    target_link_libraries(LayerTests PRIVATE GTest::Main)
+    target_link_libraries(LayerTests PRIVATE CompiledNN)
+    gtest_discover_tests(LayerTests)
+  endif()
+endif()

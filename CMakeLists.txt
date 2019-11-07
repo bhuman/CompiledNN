@@ -183,3 +183,6 @@ target_compile_definitions(CompiledNN PRIVATE ${HDF5_C_DEFINITIONS})
 
 add_executable(Benchmark Tests/Benchmark.cpp)
 target_link_libraries(Benchmark PRIVATE CompiledNN)
+
+add_executable(Check Tests/Check.cpp)
+target_link_libraries(Check PRIVATE CompiledNN)

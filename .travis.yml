@@ -1,11 +1,18 @@
-language: cpp
 dist: bionic
-before_install:
-  - curl https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo apt-key add -
-  - sudo add-apt-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
-  - sudo apt-get install -y cmake libhdf5-dev
+language: cpp
+
+addons:
+  apt:
+    sources:
+      - sourceline: 'deb https://apt.kitware.com/ubuntu/ bionic main'
+        key_url: https://apt.kitware.com/keys/kitware-archive-latest.asc
+    packages:
+      - cmake
+      - ninja-build
+      - libhdf5-dev
+
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release ..
-  - make
+  - cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+  - ninja

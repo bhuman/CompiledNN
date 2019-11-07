@@ -21,7 +21,11 @@ namespace NeuralNetwork
 
       UpSampling2DCompiler(const CompilationSettings& settings, const Parameters& p) : SISOOperationCompiler(settings), p(p) {}
 
-      inline bool canBeInplace() const override { return false; }
+      inline bool canBeInplace() const override
+      {
+        return p.size[0] == 1 && p.size[1] == 1;
+      }
+
       void initialize() override {}
       void compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const override;
 

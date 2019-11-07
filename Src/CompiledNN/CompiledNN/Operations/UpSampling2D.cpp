@@ -14,6 +14,13 @@ namespace NeuralNetwork
       ASSERT(input.rank() == 3);
       ASSERT(output.rank() == 3);
 
+      if(input.data() == output.data())
+      {
+        ASSERT(p.size[0] == 1);
+        ASSERT(p.size[1] == 1);
+        return;
+      }
+
       ASSERT((input.dims(2) % 4) == 0); // TODO
       ASSERT(input.dims(2) <= settings.xmmRegs() * 4); // TODO
 

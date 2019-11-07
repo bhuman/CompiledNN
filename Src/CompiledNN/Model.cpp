@@ -1284,19 +1284,21 @@ namespace NeuralNetwork
       hid_t kerasVersionAttributeDataspace = H5Aget_space(kerasVersionAttribute);
       ASSERT(kerasVersionAttributeDataspace >= 0);
 
-#ifndef NDEBUG
+      hid_t destinationDatatype = H5Tcopy(variableLengthStringDatatype);
+      ASSERT(destinationDatatype >= 0);
+
       ASSERT(H5Sis_simple(kerasVersionAttributeDataspace) > 0);
       ASSERT(H5Sget_simple_extent_type(kerasVersionAttributeDataspace) == H5S_SCALAR);
 
       hid_t kerasVersionAttributeDatatype = H5Aget_type(kerasVersionAttribute);
       ASSERT(H5Tget_class(kerasVersionAttributeDatatype) == H5T_STRING);
       ASSERT(H5Tis_variable_str(kerasVersionAttributeDatatype) > 0);
-      ASSERT(H5Tget_cset(kerasVersionAttributeDatatype) == H5T_CSET_ASCII);
+      ASSERT(H5Tget_cset(kerasVersionAttributeDatatype) == H5T_CSET_ASCII || H5Tget_cset(kerasVersionAttributeDatatype) == H5T_CSET_UTF8);
+      VERIFY(H5Tset_cset(destinationDatatype, H5Tget_cset(kerasVersionAttributeDatatype)) >= 0);
       VERIFY(H5Tclose(kerasVersionAttributeDatatype) >= 0);
-#endif
 
       char* kerasVersionString = nullptr;
-      VERIFY(H5Aread(kerasVersionAttribute, variableLengthStringDatatype, &kerasVersionString) >= 0);
+      VERIFY(H5Aread(kerasVersionAttribute, destinationDatatype, &kerasVersionString) >= 0);
 
       char* str = kerasVersionString;
       kerasVersion = std::strtoul(str, &str, 10) << 24;
@@ -1304,10 +1306,11 @@ namespace NeuralNetwork
       kerasVersion |= std::strtoul(str + 1, &str, 10) << 16;
       ASSERT(*str == '.');
       kerasVersion |= std::strtoul(str + 1, &str, 10) << 8;
-      ASSERT(*str == '\0');
+      ASSERT(*str == '\0' || *str == '-');
 
-      H5Dvlen_reclaim(variableLengthStringDatatype, kerasVersionAttributeDataspace, H5P_DEFAULT, &kerasVersionString);
+      H5Dvlen_reclaim(destinationDatatype, kerasVersionAttributeDataspace, H5P_DEFAULT, &kerasVersionString);
 
+      VERIFY(H5Tclose(destinationDatatype) >= 0);
       VERIFY(H5Sclose(kerasVersionAttributeDataspace) >= 0);
       VERIFY(H5Aclose(kerasVersionAttribute) >= 0);
     }

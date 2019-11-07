@@ -180,3 +180,6 @@ find_package(HDF5 REQUIRED)
 target_link_libraries(CompiledNN PRIVATE ${HDF5_C_LIBRARIES})
 target_include_directories(CompiledNN SYSTEM PRIVATE ${HDF5_C_INCLUDE_DIRS})
 target_compile_definitions(CompiledNN PRIVATE ${HDF5_C_DEFINITIONS})
+
+add_executable(Benchmark Tests/Benchmark.cpp)
+target_link_libraries(Benchmark PRIVATE CompiledNN)

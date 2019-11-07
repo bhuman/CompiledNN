@@ -14,5 +14,5 @@ addons:
 script:
   - mkdir build
   - cd build
-  - cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+  - /usr/bin/cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
   - ninja

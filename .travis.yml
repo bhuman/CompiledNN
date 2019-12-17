@@ -13,6 +13,10 @@ addons:
       - libgtest-dev
 
 script:
+  - pushd /usr/src/googletest
+  - cmake .
+  - cmake --build . --target install
+  - popd
   - mkdir build
   - cd build
   - /usr/bin/cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DWITH_APPLICATIONS=ON -DWITH_TESTS=ON ..

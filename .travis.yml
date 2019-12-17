@@ -10,6 +10,7 @@ addons:
       - cmake
       - ninja-build
       - libhdf5-dev
+      - libgtest-dev
 
 script:
   - mkdir build

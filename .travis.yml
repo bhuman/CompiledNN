@@ -13,12 +13,9 @@ addons:
       - libgtest-dev
 
 script:
-  - pushd /usr/src/googletest
-  - cmake .
-  - cmake --build . --target install
-  - popd
-  - mkdir build
+  - /usr/bin/cmake -G Ninja -S /usr/src/googletest -B gtest_build
+  - sudo /usr/bin/cmake --build gtest_build --target install
+  - /usr/bin/cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DWITH_APPLICATIONS=ON -DWITH_TESTS=ON -S . -B build
   - cd build
-  - /usr/bin/cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DWITH_APPLICATIONS=ON -DWITH_TESTS=ON ..
   - ninja
   - ninja test

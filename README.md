@@ -50,8 +50,8 @@ The included CMake file indicates which compiler options have to be set.
 ## Example
 
 ```cpp
-#include "Model.h"
-#include "CompiledNN.h"
+#include <CompiledNN/Model.h>
+#include <CompiledNN/CompiledNN.h>
 
 using namespace NeuralNetwork;
 

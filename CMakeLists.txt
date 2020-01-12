@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(CompiledNN LANGUAGES C CXX)
+project(CompiledNN VERSION 1.0.0 LANGUAGES C CXX)
 
 option(WITH_APPLICATIONS "Build applications." OFF)
 option(WITH_TESTS "Build tests." OFF)
@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_library(CompiledNN STATIC
+add_library(CompiledNN
     Src/CompiledNN/CompiledNN.cpp
     Src/CompiledNN/CompiledNN.h
     Src/CompiledNN/Model.cpp
@@ -175,6 +175,7 @@ target_compile_options(CompiledNN PRIVATE
     $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-fno-strict-aliasing>
     $<$<CXX_COMPILER_ID:MSVC>:/W3>
 )
+
 if(WITH_COVERAGE)
   target_compile_options(CompiledNN PUBLIC
       $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fprofile-instr-generate>
@@ -185,17 +186,31 @@ if(WITH_COVERAGE)
   target_compile_options(CompiledNN PUBLIC $<$<CXX_COMPILER_ID:GNU>:--coverage>)
   target_link_options(CompiledNN PUBLIC $<$<CXX_COMPILER_ID:GNU>:--coverage>)
 endif()
-target_include_directories(CompiledNN PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Src")
-target_include_directories(CompiledNN SYSTEM PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/B-Human")
-target_include_directories(CompiledNN SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src")
-target_compile_definitions(CompiledNN PRIVATE ASMJIT_STATIC ASMJIT_BUILD_X86 ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
-    ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_VALIDATION ASMJIT_NO_INTROSPECTION)
-target_link_libraries(CompiledNN PUBLIC $<$<PLATFORM_ID:Linux>:pthread> $<$<PLATFORM_ID:Linux>:rt>)
+
+target_include_directories(CompiledNN PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Src>"
+    "$<INSTALL_INTERFACE:include/CompiledNN>"
+)
+target_include_directories(CompiledNN SYSTEM PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/B-Human>"
+    "$<INSTALL_INTERFACE:include/CompiledNN>"
+)
+target_include_directories(CompiledNN SYSTEM PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src"
+)
+target_compile_definitions(CompiledNN PRIVATE
+    ASMJIT_STATIC ASMJIT_BUILD_X86 ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
+    ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_VALIDATION ASMJIT_NO_INTROSPECTION
+)
+target_link_libraries(CompiledNN PUBLIC
+    $<$<PLATFORM_ID:Linux>:pthread> $<$<PLATFORM_ID:Linux>:rt>
+)
+set_target_properties(CompiledNN PROPERTIES
+    PUBLIC_HEADER "Src/CompiledNN/CompiledNN.h;Src/CompiledNN/Model.h;Src/CompiledNN/SimpleNN.h;Src/CompiledNN/Tensor.h"
+)
 
 find_package(HDF5 REQUIRED)
-target_link_libraries(CompiledNN PRIVATE ${HDF5_C_LIBRARIES})
-target_include_directories(CompiledNN SYSTEM PRIVATE ${HDF5_C_INCLUDE_DIRS})
-target_compile_definitions(CompiledNN PRIVATE ${HDF5_C_DEFINITIONS})
+target_link_libraries(CompiledNN PRIVATE hdf5::hdf5-shared)
 
 if(WITH_APPLICATIONS)
   add_executable(Benchmark Tests/Benchmark.cpp)
@@ -219,3 +234,47 @@ if(WITH_TESTS)
     gtest_discover_tests(LayerTests)
   endif()
 endif()
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+# install library
+install(TARGETS CompiledNN
+    EXPORT CompiledNNTargets
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CompiledNN"
+)
+
+# install 3rd-party headers (because PUBLIC_HEADER does not support nested directories)
+install(FILES
+    Src/CompiledNN/CompiledNN/CompilationSettings.h
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CompiledNN/CompiledNN"
+)
+install(FILES
+    3rdParty/B-Human/Platform/BHAssert.h
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CompiledNN/Platform"
+)
+install(FILES
+    3rdParty/B-Human/Tools/Math/BHMath.h
+    3rdParty/B-Human/Tools/Math/NeumaierSum.h
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CompiledNN/Tools/Math"
+)
+
+# install targets, configuration and version files
+install(EXPORT CompiledNNTargets
+    NAMESPACE CompiledNN::
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/CompiledNN"
+)
+configure_file(CompiledNNConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/CompiledNNConfig.cmake"
+    COPYONLY
+)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/CompiledNNConfigVersion.cmake"
+    COMPATIBILITY AnyNewerVersion
+)
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/CompiledNNConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/CompiledNNConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/CompiledNN"
+)

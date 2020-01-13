@@ -23,7 +23,7 @@ make
 make install
 ```
 
-Another way to integrate CompiledNN is add it (and its dependency [AsmJit](https://github.com/asmjit/asmjit)) as source files to your project.
+Another way to integrate CompiledNN is to add it (and its dependency [AsmJit](https://github.com/asmjit/asmjit)) as source files to your project.
 
 ## Supported layers
 

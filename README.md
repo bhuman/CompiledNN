@@ -1,18 +1,32 @@
 # CompiledNN: A JIT Compiler for Neural Network Inference
+
 [![Build Status](https://travis-ci.org/bhuman/CompiledNN.svg?branch=master)](https://travis-ci.org/bhuman/CompiledNN)
 
 ## Features
+
 - compiles Keras HDF5 models into machine code
 - generates single-threaded code for x86/64 processors with SSSE3/SSE4
 
 ## Dependencies
+
 - HDF5 (C bindings only)
 
 ## Compiling
-The easiest way to integrate CompiledNN is to add it (and its dependency [AsmJit](https://github.com/asmjit/asmjit)) as source files to your project.
-The included CMake file indicates which compiler options have to be set.
+
+CompiledNN can be compiled into a library via CMake:
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+make install
+```
+
+Another way to integrate CompiledNN is add it (and its dependency [AsmJit](https://github.com/asmjit/asmjit)) as source files to your project.
 
 ## Supported layers
+
 - Core
   - Dense
   - Activation

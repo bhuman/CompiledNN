@@ -244,6 +244,17 @@ install(TARGETS CompiledNN
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CompiledNN"
 )
+# install binaries
+if(WITH_APPLICATIONS)
+    install(TARGETS Benchmark
+        EXPORT CompiledNNTargets
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    )
+    install(TARGETS Check
+        EXPORT CompiledNNTargets
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    )
+endif()
 
 # install 3rd-party headers (because PUBLIC_HEADER does not support nested directories)
 install(FILES

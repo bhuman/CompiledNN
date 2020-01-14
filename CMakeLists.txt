@@ -210,6 +210,14 @@ set_target_properties(CompiledNN PROPERTIES
 )
 
 find_package(HDF5 REQUIRED)
+if(NOT TARGET hdf5::hdf5-shared)
+  add_library(hdf5::hdf5-shared INTERFACE IMPORTED)
+  set_target_properties(hdf5::hdf5-shared PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${HDF5_C_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${HDF5_C_INCLUDE_DIRS}"
+      INTERFACE_COMPILE_OPTIONS "${HDF5_C_DEFINITIONS}"
+  )
+endif()
 target_link_libraries(CompiledNN PRIVATE hdf5::hdf5-shared)
 
 if(WITH_APPLICATIONS)

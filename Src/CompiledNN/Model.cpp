@@ -917,7 +917,9 @@ namespace NeuralNetwork
 
   std::unique_ptr<Layer> parseBatchNormalizationLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType& getWeights, unsigned long kerasVersion)
   {
-    const int axis = getLiteral<int>(getRecordEntry<SimpleMap::Literal>(config, "axis"));
+    SimpleMap::Record::const_iterator iter = config->find("axis");
+    ASSERT(iter != config->end());
+    const int axis = getLiteral<int>(dynamic_cast<const SimpleMap::Array*>(iter->second) ? getArrayEntry<SimpleMap::Literal>(getRecordEntry<SimpleMap::Array>(config, "axis"), 0) : getRecordEntry<SimpleMap::Literal>(config, "axis"));
     const float epsilon = getLiteral<float>(getRecordEntry<SimpleMap::Literal>(config, "epsilon"));
     const bool center = getLiteral<bool>(getRecordEntry<SimpleMap::Literal>(config, "center"));
     const bool scale = getLiteral<bool>(getRecordEntry<SimpleMap::Literal>(config, "scale"));
@@ -1009,6 +1011,7 @@ namespace NeuralNetwork
       layerParsers.emplace("ReLU", &parseReluLayer);
     // Normalization layers
     layerParsers.emplace("BatchNormalization", &parseBatchNormalizationLayer);
+    layerParsers.emplace("BatchNormalizationV1", &parseBatchNormalizationLayer);
 
     SimpleMap map(stream, fileName, /* jsonMode: */ true);
     const SimpleMap::Record* root = dynamic_cast<const SimpleMap::Record*>(map.operator const SimpleMap::Value*());

@@ -38,7 +38,7 @@ namespace NeuralNetwork
         return {inputDimensions[0]};
       }
 
-      inline std::vector<std::size_t> routeIO(const std::vector<std::size_t>& indices, const std::vector<std::vector<unsigned int>>& inputDimensions) const override
+      inline std::vector<std::size_t> routeIO(const std::vector<std::size_t>& indices, const std::vector<std::vector<unsigned int>>&) const override
       {
         // This may break associativity of the original sum.
         // If associativity is needed, add && (indices[0] == 0 || indices[0] == 1)

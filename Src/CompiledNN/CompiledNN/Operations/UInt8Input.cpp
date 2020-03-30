@@ -49,7 +49,7 @@ namespace NeuralNetwork
       }
     }
 
-    void UInt8InputCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void UInt8InputCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       a.mov(a.zsi(), imm(input.data()));
       a.mov(a.zdi(), imm(output.data()));

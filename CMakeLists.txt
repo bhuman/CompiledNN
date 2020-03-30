@@ -171,7 +171,6 @@ add_library(CompiledNN
 target_compile_options(CompiledNN PRIVATE
     $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wall>
     $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wextra>
-    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wno-unused-parameter>
     $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-fno-strict-aliasing>
     $<$<CXX_COMPILER_ID:MSVC>:/W3>
 )

@@ -91,7 +91,7 @@ namespace NeuralNetwork
       }
     }
 
-    void ConcatenateCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler,
+    void ConcatenateCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&,
                                       const std::vector<TensorPointerXf>& input, const std::vector<TensorPointerXf>& output) const
     {
       ASSERT(output.size() == 1);

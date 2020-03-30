@@ -21,7 +21,7 @@ namespace NeuralNetwork
       }
     }
 
-    void Pooling2DCompiler::pool(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int paddingHorizontal, const unsigned int paddingVertical, const unsigned int inputWidth, const unsigned int channels) const
+    void Pooling2DCompiler::pool(x86::Assembler& a, ActivationFunctionHandler&, const unsigned int paddingHorizontal, const unsigned int paddingVertical, const unsigned int inputWidth, const unsigned int channels) const
     {
       const bool aligned = channels % 4 == 0;
       const bool isPadded = paddingHorizontal + paddingVertical > 0;

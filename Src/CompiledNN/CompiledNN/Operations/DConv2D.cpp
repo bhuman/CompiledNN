@@ -47,7 +47,7 @@ namespace NeuralNetwork
       }
     }
 
-    void DConv2DCompiler::compileFilter(x86::Assembler& a, const bool inputAligned, const unsigned int remainingOutputs, const unsigned int remainingInput, const bool lastFilter) const
+    void DConv2DCompiler::compileFilter(x86::Assembler& a, const bool inputAligned, const unsigned int remainingOutputs, const unsigned int, const bool) const
     {
       const unsigned int stepSize = (remainingOutputs + 3) / 4;
 
@@ -265,7 +265,7 @@ namespace NeuralNetwork
       }
     }
 
-    void DConv2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void DConv2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 3);
       ASSERT(output.rank() == 3);

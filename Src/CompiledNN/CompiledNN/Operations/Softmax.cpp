@@ -30,7 +30,7 @@ namespace NeuralNetwork
         vals[i] = *reinterpret_cast<const float*>(&offset);
     }
 
-    void SoftmaxCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void SoftmaxCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.dims() == output.dims());
       // TODO: Support for >1D tensors.

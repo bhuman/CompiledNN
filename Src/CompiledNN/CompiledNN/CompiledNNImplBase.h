@@ -74,7 +74,7 @@ namespace NeuralNetwork
         return {calcOutputDimensions(inputDimensions[0])};
       }
 
-      std::vector<std::size_t> routeIO(const std::vector<std::size_t>& indices, const std::vector<std::vector<unsigned int>>& inputDimensions) const override
+      std::vector<std::size_t> routeIO(const std::vector<std::size_t>& indices, const std::vector<std::vector<unsigned int>>&) const override
       {
         if(!indices.empty() && canBeInplace())
           return {indices[0]};

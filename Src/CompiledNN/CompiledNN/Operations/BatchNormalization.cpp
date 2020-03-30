@@ -55,7 +55,7 @@ namespace NeuralNetwork
       }
     }
 
-    void BatchNormalizationCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void BatchNormalizationCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.dims() == output.dims());
       ASSERT(p.dimension < input.rank());

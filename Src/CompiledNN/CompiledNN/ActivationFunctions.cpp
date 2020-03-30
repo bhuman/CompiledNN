@@ -204,7 +204,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void sigmoidExpApproxDefineData(std::vector<float>& data, const ActivationFunctionParameters* const params)
+    void sigmoidExpApproxDefineData(std::vector<float>& data, const ActivationFunctionParameters* const)
     {
       constexpr int count = single ? 1 : 4;
 
@@ -219,7 +219,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void sigmoidExpApproxInitialize(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares)
+    void sigmoidExpApproxInitialize(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares)
     {
       ASSERT(spares.size() >= 3);
 
@@ -233,7 +233,7 @@ namespace NeuralNetwork
     }
 
     template<bool tanH, bool single>
-    void sigmoidExpApproxApply(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
+    void sigmoidExpApproxApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
     {
       // Calculate sigmoid as exp(x) / (exp(x) + 1) or tanh as (exp(2x) - 1) / (exp(2x) + 1), approximating exp(x)
       if(tanH)
@@ -330,7 +330,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void tanhDefineData(std::vector<float>& data, const ActivationFunctionParameters* const params)
+    void tanhDefineData(std::vector<float>& data, const ActivationFunctionParameters* const)
     {
       constexpr int count = single ? 1 : 4;
       for(int i = count; i; --i)
@@ -350,7 +350,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void tanhInitialize(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares)
+    void tanhInitialize(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares)
     {
       ASSERT(spares.size() >= 3);
 
@@ -444,7 +444,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void tanhApply(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
+    void tanhApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
     {
       for(const x86::Xmm& value : values)
       {
@@ -472,7 +472,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void sigmoidApply(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
+    void sigmoidApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
     {
       for(const x86::Xmm& value : values)
       {
@@ -523,7 +523,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void hardSigmoidDefineData(std::vector<float>& data, const ActivationFunctionParameters* const params)
+    void hardSigmoidDefineData(std::vector<float>& data, const ActivationFunctionParameters* const)
     {
       constexpr int count = single ? 1 : 4;
       for(int i = count; i; --i)
@@ -535,7 +535,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void hardSigmoidInitialize(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares)
+    void hardSigmoidInitialize(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares)
     {
       ASSERT(spares.size());
       a.xorps(spares[0], spares[0]);
@@ -550,7 +550,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void hardSigmoidApply(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
+    void hardSigmoidApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
     {
       for(const x86::Xmm& value : values)
       {
@@ -594,7 +594,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void eluInitialize(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares)
+    void eluInitialize(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares)
     {
       ASSERT(spares.size() >= 3);
 
@@ -705,7 +705,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void seluDefineData(std::vector<float>& data, const ActivationFunctionParameters* const params)
+    void seluDefineData(std::vector<float>& data, const ActivationFunctionParameters* const)
     {
       constexpr int count = single ? 1 : 4;
 
@@ -728,7 +728,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void seluInitialize(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares)
+    void seluInitialize(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares)
     {
       ASSERT(spares.size() >= 3);
 
@@ -742,7 +742,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void seluApply(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
+    void seluApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
     {
       // selu(x) = scale * sign(x) * max(-alpha * exp(x) + alpha, x)
       const size_t constOffset = spares.size() <= 5 ? 1 : spares.size() - 5;
@@ -830,7 +830,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void exponentialDefineData(std::vector<float>& data, const ActivationFunctionParameters* const params)
+    void exponentialDefineData(std::vector<float>& data, const ActivationFunctionParameters* const)
     {
       constexpr int count = single ? 1 : 4;
 
@@ -844,7 +844,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void exponentialInitialize(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares)
+    void exponentialInitialize(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares)
     {
       for(size_t offset = 0, i = spares.size() < 2 ? 0 : spares.size() - 2; i < spares.size(); offset++, i++)
       {
@@ -856,7 +856,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void exponentialApply(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
+    void exponentialApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
     {
       if(spares.size() == 0)
         ExpApprox::apply<single>(a, values, x86::ptr(label, static_cast<unsigned int>((single ? 1 : 4) * sizeof(float))), x86::ptr(label));
@@ -867,7 +867,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void softsignDefineData(std::vector<float>& data, const ActivationFunctionParameters* const params)
+    void softsignDefineData(std::vector<float>& data, const ActivationFunctionParameters* const)
     {
       constexpr int count = single ? 1 : 4;
 
@@ -880,7 +880,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void softsignInitialize(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares)
+    void softsignInitialize(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares)
     {
       ASSERT(spares.size() >= 2);
 
@@ -894,7 +894,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void softsignApply(x86::Assembler& a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
+    void softsignApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label&, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
     {
       // softsign(x) = x / (abs(x) + 1)
       const size_t constOffset = spares.size() < 2 ? 1 : spares.size() - 2;
@@ -997,9 +997,9 @@ namespace NeuralNetwork
         case CompiledActivationFunctionId::linear:
           functionData.emplace_back(
             desc, single,
-          [](std::vector<float>& data, const ActivationFunctionParameters* const) {},
-          [](x86::Assembler & a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares) {},
-          [](x86::Assembler & a, const ActivationFunctionParameters* const params, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values) {}
+          [](std::vector<float>&, const ActivationFunctionParameters* const) {},
+          [](x86::Assembler&, const ActivationFunctionParameters* const, const Label&, const std::vector<x86::Xmm>&) {},
+          [](x86::Assembler&, const ActivationFunctionParameters* const, const Label&, const std::vector<x86::Xmm>&, const std::vector<x86::Xmm>&) {}
           );
           break;
         case CompiledActivationFunctionId::relu:

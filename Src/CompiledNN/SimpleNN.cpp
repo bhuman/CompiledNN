@@ -101,18 +101,18 @@ namespace NeuralNetwork
         }
       }
 
-      void apply(const std::vector<const TensorXf*>& input, std::vector<TensorXf*>& output, const DropoutLayer& layer)
+      void apply(const std::vector<const TensorXf*>& input, std::vector<TensorXf*>& output, const DropoutLayer&)
       {
         for(std::size_t i = 0; i < input.size(); ++i)
           output[i]->copyFrom(*input[i]);
       }
 
-      void apply(const TensorXf& input, TensorXf& output, const FlattenLayer& layer)
+      void apply(const TensorXf& input, TensorXf& output, const FlattenLayer&)
       {
         output.copyFrom(input);
       }
 
-      void apply(const TensorXf& input, TensorXf& output, const ReshapeLayer& layer)
+      void apply(const TensorXf& input, TensorXf& output, const ReshapeLayer&)
       {
         output.copyFrom(input);
       }

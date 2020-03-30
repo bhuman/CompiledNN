@@ -512,7 +512,7 @@ namespace NeuralNetwork
 
   class CompilationErrorHandler : public ErrorHandler
   {
-    void handleError(Error err, const char* message, BaseEmitter* origin) override
+    void handleError(Error, const char* message, BaseEmitter*) override
     {
       FAIL(message);
     }

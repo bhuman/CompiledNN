@@ -9,7 +9,7 @@ namespace NeuralNetwork
 {
   namespace CompiledNNImpl
   {
-    void Cropping2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void Cropping2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 3);
       ASSERT(output.rank() == 3);

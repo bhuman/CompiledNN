@@ -1012,6 +1012,8 @@ namespace NeuralNetwork
     // Normalization layers
     layerParsers.emplace("BatchNormalization", &parseBatchNormalizationLayer);
     layerParsers.emplace("BatchNormalizationV1", &parseBatchNormalizationLayer);
+    // Regularization layers
+    layerParsers.emplace("SpatialDropout2D", &parseDropoutLayer);
 
     SimpleMap map(stream, fileName, /* jsonMode: */ true);
     const SimpleMap::Record* root = dynamic_cast<const SimpleMap::Record*>(map.operator const SimpleMap::Value*());

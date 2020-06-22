@@ -20,7 +20,7 @@ namespace NeuralNetwork
 
       ZeroPadding2DCompiler(const CompilationSettings& settings, const Parameters& p) : SISOOperationCompiler(settings), p(p) {}
 
-      inline bool canBeInplace() const override { return false; }
+      inline bool canBeInplace() const override { return !p.padding[ZeroPadding2DLayer::TOP] && !p.padding[ZeroPadding2DLayer::LEFT] && !p.padding[ZeroPadding2DLayer::RIGHT]; }
       void initialize() override {}
       void compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const override;
 

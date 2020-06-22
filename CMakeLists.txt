@@ -235,6 +235,7 @@ if(WITH_TESTS)
 
     add_executable(LayerTests
         Tests/Layers/UpSampling2D.cpp
+        Tests/Layers/ZeroPadding2D.cpp
     )
     target_link_libraries(LayerTests PRIVATE GTest::Main)
     target_link_libraries(LayerTests PRIVATE CompiledNN)

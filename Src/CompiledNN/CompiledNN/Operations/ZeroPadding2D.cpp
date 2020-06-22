@@ -19,53 +19,70 @@ namespace NeuralNetwork
       ASSERT(input.dims(2) == output.dims(2));
 
       // Pad image
-      a.mov(a.zsi(), imm(input.data()));
-      a.mov(a.zdi(), imm(output.data() + ((output.dims(1) * p.padding[ZeroPadding2DLayer::TOP] + p.padding[ZeroPadding2DLayer::LEFT]) * output.dims(2))));
-      if(input.dims(1) * input.dims(2) % 4 == 0)
       {
+        a.mov(a.zsi(), imm(input.data()));
+        a.mov(a.zdi(), imm(output.data() + ((output.dims(1) * p.padding[ZeroPadding2DLayer::TOP] + p.padding[ZeroPadding2DLayer::LEFT]) * output.dims(2))));
+
+        const bool aligned = input.dims(1) * input.dims(2) % 4 == 0;
         a.mov(a.zax(), imm(input.dims(0)));
         Label copyLoop = a.newLabel();
         a.bind(copyLoop);
 
-        unsigned int stepsRemaining = input.dims(1) * input.dims(2) / 4;
+        unsigned int remainingChannels = input.dims(1) * input.dims(2);
         for(unsigned int stepSize = settings.xmmRegs(); stepSize; --stepSize)
         {
-          if(stepsRemaining < stepSize)
+          const unsigned int channelsPerStep = stepSize * 4;
+          if(remainingChannels < channelsPerStep)
             continue;
 
           Label copyRowLoop;
-          if(stepsRemaining >= 2 * stepSize)
+          if(remainingChannels >= 2 * channelsPerStep)
           {
             copyRowLoop = a.newLabel();
-            a.mov(a.zcx(), imm(stepsRemaining / stepSize));
+            a.mov(a.zcx(), imm(remainingChannels / channelsPerStep));
             a.bind(copyRowLoop);
           }
 
           for(unsigned int i = 0; i < stepSize; i++)
-            a.movaps(x86::xmm(i), a.ptr_zsi(i * 4 * sizeof(float)));
+            if(aligned)
+              a.movaps(x86::xmm(i), a.ptr_zsi(i * 4 * sizeof(float)));
+            else
+              a.movups(x86::xmm(i), a.ptr_zsi(i * 4 * sizeof(float)));
           for(unsigned int i = 0; i < stepSize; i++)
             a.movups(a.ptr_zdi(i * 4 * sizeof(float)), x86::xmm(i));
 
           a.add(a.zsi(), imm(stepSize * 4 * sizeof(float)));
           a.add(a.zdi(), imm(stepSize * 4 * sizeof(float)));
 
-          if(stepsRemaining >= 2 * stepSize)
+          if(remainingChannels >= 2 * channelsPerStep)
           {
             a.dec(a.zcx());
             a.jnz(copyRowLoop);
           }
 
-          stepsRemaining %= stepSize;
+          remainingChannels %= channelsPerStep;
         }
-        a.add(a.zdi(), imm((p.padding[ZeroPadding2DLayer::LEFT] + p.padding[ZeroPadding2DLayer::RIGHT]) * output.dims(2) * sizeof(float)));
+        unsigned int zdiOffset = 0;
+        if(remainingChannels)
+        {
+          ASSERT(remainingChannels < 4);
+          if(remainingChannels == 1)
+          {
+            a.movss(x86::xmm0, a.ptr_zsi());
+            a.movss(a.ptr_zdi(), x86::xmm0);
+          }
+          else
+          {
+            a.movups(x86::xmm0, a.ptr_zsi(0));
+            a.movups(a.ptr_zdi(0), x86::xmm0);
+          }
+          a.add(a.zsi(), imm(remainingChannels * sizeof(float)));
+          zdiOffset = remainingChannels;
+        }
+        a.add(a.zdi(), imm(((p.padding[ZeroPadding2DLayer::LEFT] + p.padding[ZeroPadding2DLayer::RIGHT]) * output.dims(2) + zdiOffset) * sizeof(float)));
 
         a.dec(a.zax());
         a.jnz(copyLoop);
-      }
-      else
-      {
-        // TODO
-        ASSERT(false);
       }
 
       // Prepare setting borders to zero

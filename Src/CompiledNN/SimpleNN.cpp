@@ -399,6 +399,8 @@ namespace NeuralNetwork
                     else
                       ASSERT(false);
                   }
+                  else if(layer.method == PoolingMethod::max)
+                    output(outputY, outputX, channel) = std::max(output(outputY, outputX, channel), 0.f);
                 }
               }
             }

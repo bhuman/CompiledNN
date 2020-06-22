@@ -102,14 +102,14 @@ namespace NeuralNetwork
                   }
                 }
 
-                if(helper != stepSize)
+                if(helper != 0)
                 {
-                  for(unsigned int i = stepSize; i < helper; i++)
+                  for(unsigned int i = 0; i < helper; i++)
                   {
                     if(p.method == PoolingMethod::average)
-                      a.addps(x86::xmm(stepSize - (helper - i)), x86::xmm(i));
+                      a.addps(x86::xmm(stepSize - (helper - i)), x86::xmm(helperOffset + i));
                     else // method == Pooling2DLayer::PoolingMethod::max
-                      a.maxps(x86::xmm(stepSize - (helper - i)), x86::xmm(i));
+                      a.maxps(x86::xmm(stepSize - (helper - i)), x86::xmm(helperOffset + i));
                   }
                 }
               }
@@ -180,21 +180,24 @@ namespace NeuralNetwork
       unsigned int nonPaddedCols = 0;
       for(; inputCol < paddingLeft + inputWidth - p.kernelSize[1] + 1; inputCol += p.strides[1], outputCol++, nonPaddedCols++);
 
-      // Begin loop over image cols
-      a.mov(a.zcx(), imm(nonPaddedCols));
-      Label inputColLoop = a.newLabel();
-      a.bind(inputColLoop);
+      if(nonPaddedCols)
+      {
+        // Begin loop over image cols
+        a.mov(a.zcx(), imm(nonPaddedCols));
+        Label inputColLoop = a.newLabel();
+        a.bind(inputColLoop);
 
-      // Pool current cell
-      pool(a, afHandler, 0, paddingVertical, inputWidth, channels);
+        // Pool current cell
+        pool(a, afHandler, 0, paddingVertical, inputWidth, channels);
 
-      // Set input offset to next column, respecting the stride
-      a.add(a.zsi(), imm(p.strides[1] * channels * sizeof(float)));
+        // Set input offset to next column, respecting the stride
+        a.add(a.zsi(), imm(p.strides[1] * channels * sizeof(float)));
 
-      // End loop over image cols
-      a.dec(a.zcx());
-      a.jnz(inputColLoop);
-      offset += nonPaddedCols * p.strides[1] * channels * sizeof(float);
+        // End loop over image cols
+        a.dec(a.zcx());
+        a.jnz(inputColLoop);
+        offset += nonPaddedCols * p.strides[1] * channels * sizeof(float);
+      }
 
       // Pool right-padded cells
       for(; outputCol < outputWidth; inputCol += p.strides[1], outputCol++)
@@ -257,20 +260,23 @@ namespace NeuralNetwork
       unsigned int nonPaddedRows = 0;
       for(; inputRow < paddingTop + input.dims(0) - p.kernelSize[0] + 1; inputRow += p.strides[0], outputRow++, nonPaddedRows++);
 
-      // Begin loop over image rows
-      a.mov(a.zax(), imm(nonPaddedRows));
-      Label inputRowLoop = a.newLabel();
-      a.bind(inputRowLoop);
+      if(nonPaddedRows)
+      {
+        // Begin loop over image rows
+        a.mov(a.zax(), imm(nonPaddedRows));
+        Label inputRowLoop = a.newLabel();
+        a.bind(inputRowLoop);
 
-      // Apply pooling to current row
-      const unsigned int offset = poolRow(a, afHandler, paddingLeft, 0, input.dims(1), output.dims(1), input.dims(2));
+        // Apply pooling to current row
+        const unsigned int offset = poolRow(a, afHandler, paddingLeft, 0, input.dims(1), output.dims(1), input.dims(2));
 
-      // Set input offset to next row, respecting the stride
-      a.add(a.zsi(), imm(p.strides[0] * input.dims(1) * input.dims(2) * sizeof(float) - offset));
+        // Set input offset to next row, respecting the stride
+        a.add(a.zsi(), imm(p.strides[0] * input.dims(1) * input.dims(2) * sizeof(float) - offset));
 
-      // End loop over image rows
-      a.dec(a.zax());
-      a.jnz(inputRowLoop);
+        // End loop over image rows
+        a.dec(a.zax());
+        a.jnz(inputRowLoop);
+      }
 
       // Pool bottom-padded rows
       for(; outputRow < output.dims(0); inputRow += p.strides[0], outputRow++)

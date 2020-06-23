@@ -64,7 +64,7 @@ public:
       SimpleNN::apply({TensorXf(c.input(0))}, testOutputTensors, n);
       c.apply();
 
-      const float err = testOutputTensors[0].absError(c.output(0), false);
+      const float err = testOutputTensors[0].maxAbsError(c.output(0));
       if(err > absError)
         absError = err;
     }

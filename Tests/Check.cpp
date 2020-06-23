@@ -168,12 +168,12 @@ int main(int argc, char* argv[])
 
     std::cout << "Layer error (SimpleNN vs CompiledNN):";
     if(outputs.size() == 1)
-      std::cout << " rel " << outputs[0]->relError(compiledNN.output(0), true) << ", abs " << outputs[0]->absError(compiledNN.output(0), true) << '\n';
+      std::cout << " rel " << outputs[0]->maxRelError(compiledNN.output(0)) << ", abs " << outputs[0]->maxAbsError(compiledNN.output(0)) << '\n';
     else
     {
       std::cout << '\n';
       for(std::size_t i = 0; i < outputs.size(); ++i)
-        std::cout << "    rel " << outputs[i]->relError(compiledNN.output(i), true) << ", abs " << outputs[i]->absError(compiledNN.output(i), true) << '\n';
+        std::cout << "    rel " << outputs[i]->maxRelError(compiledNN.output(i)) << ", abs " << outputs[i]->maxAbsError(compiledNN.output(i)) << '\n';
     }
   });
 
@@ -187,12 +187,12 @@ int main(int argc, char* argv[])
   ASSERT(compiledNN.numOfOutputs() == testOutputs.size());
   std::cout << "Total error (SimpleNN vs CompiledNN):";
   if(testOutputs.size() == 1)
-    std::cout << " rel " << testOutputs[0].relError(compiledNN.output(0), true) << ", abs " << testOutputs[0].absError(compiledNN.output(0), true) << '\n';
+    std::cout << " rel " << testOutputs[0].maxRelError(compiledNN.output(0)) << ", abs " << testOutputs[0].maxAbsError(compiledNN.output(0)) << '\n';
   else
   {
     std::cout << std::endl;
     for(std::size_t i = 0; i < testOutputs.size(); ++i)
-      std::cout << "    rel " << testOutputs[i].relError(compiledNN.output(i), true) << ", abs " << testOutputs[i].absError(compiledNN.output(i), true) << '\n';
+      std::cout << "    rel " << testOutputs[i].maxRelError(compiledNN.output(i)) << ", abs " << testOutputs[i].maxAbsError(compiledNN.output(i)) << '\n';
   }
 
   return EXIT_SUCCESS;

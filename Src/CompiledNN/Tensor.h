@@ -126,6 +126,20 @@ namespace NeuralNetwork
       return l2 ? std::sqrt(static_cast<T>(sum)) : static_cast<T>(sum);
     }
 
+    inline T maxAbsError(const Tensor<T>& other) const
+    {
+      ASSERT(dimensions == other.dimensions);
+
+      T max = T(0);
+
+      const T* p0 = begin();
+      const T* p1 = other.begin();
+      for(std::size_t size = this->size(); size; --size)
+        max = std::max(max, std::abs(*(p0++) - *(p1++)));
+
+      return max;
+    }
+
     inline T relError(const Tensor<T>& other, const bool l2) const
     {
       ASSERT(dimensions == other.dimensions);
@@ -157,6 +171,25 @@ namespace NeuralNetwork
       }
 
       return l2 ? std::sqrt(static_cast<T>(sum)) : static_cast<T>(sum);
+    }
+
+    inline T maxRelError(const Tensor<T>& other) const
+    {
+      ASSERT(dimensions == other.dimensions);
+
+      T max = T(0);
+
+      const T* p0 = begin();
+      const T* p1 = other.begin();
+      for(std::size_t size = this->size(); size; --size)
+      {
+        const T val0 = *(p0++);
+        const T val1 = *(p1++);
+        if(val0 != T(0) && val1 != T(0))
+          max = std::max(max, std::abs(T(1) - val1 / val0));
+      }
+
+      return max;
     }
 
     inline T sad(const Tensor<T>& other) const

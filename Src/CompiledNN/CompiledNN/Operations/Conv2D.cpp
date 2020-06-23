@@ -281,7 +281,7 @@ namespace NeuralNetwork
 
       // Prepare activation function
       const unsigned int activationRegsNeeded = ActivationFunctionHandler::neededSpares(p.activationDesc == CompiledActivationFunctionId::linear ? p.postActivation : p.activationDesc);
-      ActivationFn* activationFn = &(afHandler.prepare(p.activationDesc == CompiledActivationFunctionId::linear ? p.postActivation : p.activationDesc, inputSize == 1, a, {}, { x86::xmm0 }));
+      ActivationFn* activationFn = &(afHandler.prepare(p.activationDesc == CompiledActivationFunctionId::linear ? p.postActivation : p.activationDesc, p.weights->dims(3) == 1, a, {}, { x86::xmm0 }));
       if(regsNeeded + activationRegsNeeded < settings.xmmRegs())
       {
         for(unsigned int i = regsNeeded; i < regsNeeded + activationRegsNeeded; i++)
@@ -428,7 +428,7 @@ namespace NeuralNetwork
           activationFn->apply(a);
         else
         {
-          activationFn = &(afHandler.prepare(p.postActivation, inputSize == 1, a, { }, { x86::xmm0 }));
+          activationFn = &(afHandler.prepare(p.postActivation, p.weights->dims(3) == 1, a, { }, { x86::xmm0 }));
           for(unsigned int i = 1; i < settings.xmmRegs(); i++)
             activationFn->addSpare(x86::xmm(i));
           activationFn->initialize(a);

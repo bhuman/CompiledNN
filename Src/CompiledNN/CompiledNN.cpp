@@ -537,6 +537,12 @@ namespace NeuralNetwork
       a.push(a.zdi());
       a.push(a.zsi());
 #endif
+#if ASMJIT_ARCH_X86 == 64 && defined(_WIN32)
+      // Windows64
+      a.sub(a.zsp(), imm(10u * 4u * sizeof(float)));
+      for(unsigned int i = 6; i < 16; ++i)
+        a.movdqu(a.ptr_zsp((i - 6) * 4 * sizeof(float)), x86::xmm(i));
+#endif
     }
 
     // Declare constant labels
@@ -574,6 +580,11 @@ namespace NeuralNetwork
     // Emit epilog
     if(!operations.empty())
     {
+#if ASMJIT_ARCH_X86 == 64 && defined(_WIN32)
+      for(unsigned int i = 6; i < 16; ++i)
+        a.movdqu(x86::xmm(i), a.ptr_zsp((i - 6) * 4 * sizeof(float)));
+      a.add(a.zsp(), imm(10u * 4u * sizeof(float)));
+#endif
 #if ASMJIT_ARCH_X86 != 64 || defined(_WIN32)
       a.pop(a.zsi());
       a.pop(a.zdi());

@@ -902,7 +902,8 @@ namespace NeuralNetwork
 
   std::unique_ptr<Layer> parseReluLayer(const SimpleMap::Record* config, const Model::GetWeights2FuncType&, unsigned long kerasVersion)
   {
-    const float maxValue = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "max_value")) == "None"
+    const std::string maxValueString = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "max_value"));
+    const float maxValue = (maxValueString == "None" || maxValueString == "null")
                            ? std::numeric_limits<float>::max()
                            : getLiteral<float>(getRecordEntry<SimpleMap::Literal>(config, "max_value"));
     const float negativeSlope = kerasVersion >= makeVersion(2, 2, 3) ? getLiteral<float>(getRecordEntry<SimpleMap::Literal>(config, "negative_slope")) : 0.f;

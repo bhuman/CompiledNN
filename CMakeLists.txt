@@ -4,6 +4,7 @@ project(CompiledNN VERSION 1.0.0 LANGUAGES C CXX)
 option(WITH_APPLICATIONS "Build applications." OFF)
 option(WITH_TESTS "Build tests." OFF)
 option(WITH_COVERAGE "Enable coverage." OFF)
+option(WITH_KERAS_HDF5 "Enable Keras HDF5 model format." ON)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -208,16 +209,23 @@ set_target_properties(CompiledNN PROPERTIES
     PUBLIC_HEADER "Src/CompiledNN/CompiledNN.h;Src/CompiledNN/Model.h;Src/CompiledNN/SimpleNN.h;Src/CompiledNN/Tensor.h"
 )
 
-find_package(HDF5 REQUIRED)
-if(NOT TARGET hdf5::hdf5-shared)
-  add_library(hdf5::hdf5-shared INTERFACE IMPORTED)
-  set_target_properties(hdf5::hdf5-shared PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${HDF5_C_LIBRARIES}"
-      INTERFACE_INCLUDE_DIRECTORIES "${HDF5_C_INCLUDE_DIRS}"
-      INTERFACE_COMPILE_OPTIONS "${HDF5_C_DEFINITIONS}"
+if(WITH_KERAS_HDF5)
+  find_package(HDF5 REQUIRED)
+  if(NOT TARGET hdf5::hdf5-shared)
+    add_library(hdf5::hdf5-shared INTERFACE IMPORTED)
+    set_target_properties(hdf5::hdf5-shared PROPERTIES
+        INTERFACE_LINK_LIBRARIES "${HDF5_C_LIBRARIES}"
+        INTERFACE_INCLUDE_DIRECTORIES "${HDF5_C_INCLUDE_DIRS}"
+        INTERFACE_COMPILE_OPTIONS "${HDF5_C_DEFINITIONS}"
+    )
+  endif()
+  target_link_libraries(CompiledNN PRIVATE hdf5::hdf5-shared)
+  target_compile_definitions(CompiledNN PRIVATE WITH_KERAS_HDF5)
+  target_sources(CompiledNN PRIVATE
+      Src/CompiledNN/Formats/KerasHDF5.cpp
+      Src/CompiledNN/Formats/KerasHDF5.h
   )
 endif()
-target_link_libraries(CompiledNN PRIVATE hdf5::hdf5-shared)
 
 if(WITH_APPLICATIONS)
   add_executable(Benchmark Tests/Benchmark.cpp)

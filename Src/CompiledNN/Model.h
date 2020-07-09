@@ -9,7 +9,6 @@
 
 #include "Tensor.h"
 #include <array>
-#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -106,21 +105,11 @@ namespace NeuralNetwork
    */
   struct Model final
   {
-    /// getWeights with layer name as first parameter
-    using GetWeightsFuncType = std::function<void(const std::string&, const std::string&, std::vector<float>&, std::vector<unsigned int>&)>;
-    /// getWeights with bound layer name
-    using GetWeights2FuncType = std::function<void(const std::string&, std::vector<float>&, std::vector<unsigned int>&)>;
-
   private:
     std::vector<std::unique_ptr<Layer>> layers;
     std::vector<bool> uint8Inputs;
     std::vector<TensorLocation> inputs;
     std::vector<TensorLocation> outputs;
-
-    /**
-     * Parses a model from a JSON description.
-     */
-    void parseJSONModel(In& stream, const std::string& fileName, const GetWeightsFuncType& getWeights, unsigned long kerasVersion);
 
   public:
     Model() = default;
@@ -161,18 +150,9 @@ namespace NeuralNetwork
     void clear() { layers.clear(); inputs.clear(); outputs.clear(); uint8Inputs.clear(); }
 
     /**
-     * Loads a neural network model from the given file, determining the file format from the file name.
-     * Only Keras HDF 5 is supported in this version.
+     * Loads a neural network model from the given file.
      */
-    void load(const std::string& file)
-    {
-      loadKerasHDF5(file);
-    }
-
-    /**
-     * Loads a neural network model from the given file in the native Keras HDF5 format.
-     */
-    void loadKerasHDF5(const std::string& file);
+    void load(const std::string& file);
   };
 
   enum class ActivationFunctionId : unsigned int

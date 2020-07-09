@@ -266,6 +266,7 @@ void InMap::printError(const std::string& msg)
         path += buf;
       }
     }
+    static_cast<void>(msg);
     FAIL(name << (name == "" || path == "" ? "" : ", ") <<
          path << (name == "" && path == "" ? "" : ": ") << msg);
   }
@@ -380,12 +381,12 @@ void InMap::inUInt(unsigned int& value)
   }
 }
 
-void InMap::read(void* p, size_t size)
+void InMap::read(void*, size_t)
 {
   FAIL("Unsupported operation.");
 }
 
-void InMap::skip(size_t size)
+void InMap::skip(size_t)
 {
   FAIL("Unsupported operation.");
 }

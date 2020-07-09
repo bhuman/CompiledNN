@@ -348,7 +348,7 @@ protected:
    * @param stream The stream.
    * @return End of stream reached?
    */
-  bool isEof(const PhysicalInStream& stream) const override { return eof; }
+  bool isEof(const PhysicalInStream&) const override { return eof; }
 
   /**
    * reads a bool from a stream
@@ -434,7 +434,7 @@ protected:
    * reads the 'end of line' from a stream
    * @param stream the stream to read from
    */
-  void readEndl(PhysicalInStream& stream) override {}
+  void readEndl(PhysicalInStream&) override {}
 
   /**
    * The function determines whether the current character is a whitespace.
@@ -621,7 +621,7 @@ protected:
    * In fact, the function does nothing.
    * @param stream A stream to read from.
    */
-  void readEndl(PhysicalInStream& stream) override {}
+  void readEndl(PhysicalInStream&) override {}
 
   /**
    * The function reads a number of bytes from a stream.

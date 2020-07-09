@@ -514,6 +514,7 @@ namespace NeuralNetwork
   {
     void handleError(Error, const char* message, BaseEmitter*) override
     {
+      static_cast<void>(message);
       FAIL(message);
     }
   };

@@ -287,6 +287,7 @@ SimpleMap::SimpleMap(In& stream, const std::string& name, bool jsonMode) :
   }
   catch(const std::logic_error& e)
   {
+    static_cast<void>(name);
     FAIL(name << "(" << row << ", " << column << "): " << e.what());
   }
 }

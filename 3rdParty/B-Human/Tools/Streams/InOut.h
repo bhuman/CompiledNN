@@ -102,7 +102,7 @@ public:
    */
   virtual bool isBinary() const {return false;}
 
-  virtual void select(const char* name, int type, const char* enumType = nullptr) {}
+  virtual void select(const char*, int, const char* = nullptr) {}
   virtual void deselect() {}
 
   /**
@@ -354,7 +354,7 @@ public:
    *             >= 0: array/list element index.
    * @param enumType The type as string if it is an enum. Otherwise nullptr.
    */
-  virtual void select(const char* name, int type, const char* enumType = nullptr) {}
+  virtual void select(const char*, int, const char* = nullptr) {}
 
   /**
    * Deselects a field for reading.

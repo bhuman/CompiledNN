@@ -5,6 +5,7 @@ option(WITH_APPLICATIONS "Build applications." OFF)
 option(WITH_TESTS "Build tests." OFF)
 option(WITH_COVERAGE "Enable coverage." OFF)
 option(WITH_KERAS_HDF5 "Enable Keras HDF5 model format." ON)
+option(WITH_ONNX "Enable ONNX model format." ON)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -225,6 +226,18 @@ if(WITH_KERAS_HDF5)
       Src/CompiledNN/Formats/KerasHDF5.cpp
       Src/CompiledNN/Formats/KerasHDF5.h
   )
+endif()
+
+if(WITH_ONNX)
+  find_package(Protobuf REQUIRED)
+  protobuf_generate_cpp(ONNX_PROTO_SOURCES ONNX_PROTO_HEADERS 3rdParty/onnx/onnx.proto)
+  target_sources(CompiledNN PRIVATE ${ONNX_PROTO_SOURCES} ${ONNX_PROTO_HEADERS}
+      Src/CompiledNN/Formats/ONNX.cpp
+      Src/CompiledNN/Formats/ONNX.h
+  )
+  target_link_libraries(CompiledNN PRIVATE protobuf::libprotobuf)
+  target_compile_definitions(CompiledNN PRIVATE WITH_ONNX)
+  target_include_directories(CompiledNN PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 if(WITH_APPLICATIONS)

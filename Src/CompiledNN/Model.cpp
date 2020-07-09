@@ -9,6 +9,9 @@
 #ifdef WITH_KERAS_HDF5
 #include "Formats/KerasHDF5.h"
 #endif
+#ifdef WITH_ONNX
+#include "Formats/ONNX.h"
+#endif
 #include "Platform/BHAssert.h"
 #include <functional>
 #include <utility>
@@ -295,6 +298,14 @@ namespace NeuralNetwork
     if(!file.empty() && file.back() == '5')
     {
       KerasHDF5 reader(layers, inputs, outputs);
+      reader.read(file);
+      return;
+    }
+#endif
+#ifdef WITH_ONNX
+    if(file.length() >= 5 && file.substr(file.length() - 5) == ".onnx")
+    {
+      ONNX reader(layers, inputs, outputs);
       reader.read(file);
       return;
     }

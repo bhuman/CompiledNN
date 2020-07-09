@@ -11,6 +11,8 @@ addons:
       - ninja-build
       - libhdf5-dev
       - libgtest-dev
+      - libprotobuf-dev
+      - protobuf-compiler
 
 script:
   - /usr/bin/cmake -G Ninja -S /usr/src/googletest -B gtest_build

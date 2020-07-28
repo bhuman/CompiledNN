@@ -102,7 +102,7 @@ public:
    */
   virtual bool isBinary() const {return false;}
 
-  virtual void select(const char*, int, const char* = nullptr) {}
+  virtual void select(const char* name, int type, const char* enumType = nullptr);
   virtual void deselect() {}
 
   /**
@@ -134,6 +134,8 @@ public:
   friend Out& operator<<(Out& out, Out& (*f)(Out&));
   friend Out& endl(Out& stream);
 };
+
+inline void Out::select(const char*, int, const char*) {}
 
 /**
  * Operator that writes a Boolean into a stream.
@@ -269,7 +271,7 @@ protected:
   virtual void inSChar(signed char&) = 0;
 
   /**
-   * Virtual redirection for operator>>(unsigend char& value).
+   * Virtual redirection for operator>>(unsigned char& value).
    */
   virtual void inUChar(unsigned char&) = 0;
 
@@ -279,7 +281,7 @@ protected:
   virtual void inShort(short&) = 0;
 
   /**
-   * Virtual redirection for operator>>(unsigend short& value).
+   * Virtual redirection for operator>>(unsigned short& value).
    */
   virtual void inUShort(unsigned short&) = 0;
 
@@ -289,7 +291,7 @@ protected:
   virtual void inInt(int&) = 0;
 
   /**
-   * Virtual redirection for operator>>(unsigend int& value).
+   * Virtual redirection for operator>>(unsigned int& value).
    */
   virtual void inUInt(unsigned int&) = 0;
 
@@ -354,7 +356,7 @@ public:
    *             >= 0: array/list element index.
    * @param enumType The type as string if it is an enum. Otherwise nullptr.
    */
-  virtual void select(const char*, int, const char* = nullptr) {}
+  virtual void select(const char* name, int type, const char* enumType = nullptr);
 
   /**
    * Deselects a field for reading.
@@ -390,6 +392,8 @@ public:
   friend In& operator>>(In& in, In& (*f)(In&));
   friend In& endl(In& stream);
 };
+
+inline void In::select(const char*, int, const char*) {}
 
 /**
  * Operator that reads a Boolean from a stream.
@@ -520,8 +524,8 @@ namespace EnumHelpers
   template<typename T, bool isEnum> struct EnumOrClass
   {
     // An error here usually means that you try to stream data that is not streamable
-    static Out& write(Out& out, const T& t) {return (Out2&)out << t;}
-    static In& read(In& in, T& t) {return (In2&)in >> t;}
+    static Out& write(Out& out, const T& t) {return static_cast<Out2&>(out) << t;}
+    static In& read(In& in, T& t) {return static_cast<In2&>(in) >> t;}
   };
 
   /**
@@ -544,13 +548,13 @@ namespace EnumHelpers
       {
         unsigned char c = static_cast<unsigned char>(t); // keep old value in case streaming does nothing
         in >> c;
-        t = (T)c;
+        t = static_cast<T>(c);
       }
       else
       {
         int i = static_cast<int>(t); // keep old value in case streaming does nothing
         in >> i;
-        t = (T)i;
+        t = static_cast<T>(i);
       }
       return in;
     }

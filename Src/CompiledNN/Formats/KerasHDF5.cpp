@@ -40,7 +40,8 @@ namespace NeuralNetwork
   T getLiteral(const SimpleMap::Literal* literal)
   {
     T result;
-    literal->operator In&() >> result;
+    InTextMemory stream(literal->c_str(), literal->length());
+    stream >> result;
     return result;
   }
 

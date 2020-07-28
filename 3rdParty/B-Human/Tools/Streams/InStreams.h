@@ -226,7 +226,7 @@ protected:
   }
 
   /**
-   * Virtual redirection for operator>>(unsigend char& value).
+   * Virtual redirection for operator>>(unsigned char& value).
    */
   void inUChar(unsigned char& d) override
   {
@@ -242,7 +242,7 @@ protected:
   }
 
   /**
-   * Virtual redirection for operator>>(unsigend short& value).
+   * Virtual redirection for operator>>(unsigned short& value).
    */
   void inUShort(unsigned short& d) override
   {
@@ -258,7 +258,7 @@ protected:
   }
 
   /**
-   * Virtual redirection for operator>>(unsigend int& value).
+   * Virtual redirection for operator>>(unsigned int& value).
    */
   void inUInt(unsigned int& d) override
   {
@@ -348,7 +348,7 @@ protected:
    * @param stream The stream.
    * @return End of stream reached?
    */
-  bool isEof(const PhysicalInStream&) const override { return eof; }
+  bool isEof(const PhysicalInStream& stream) const override;
 
   /**
    * reads a bool from a stream
@@ -434,7 +434,7 @@ protected:
    * reads the 'end of line' from a stream
    * @param stream the stream to read from
    */
-  void readEndl(PhysicalInStream&) override {}
+  void readEndl(PhysicalInStream& stream) override;
 
   /**
    * The function determines whether the current character is a whitespace.
@@ -484,6 +484,10 @@ private:
    */
   bool expectString(const std::string& str, PhysicalInStream& stream);
 };
+
+inline bool InText::isEof(const PhysicalInStream&) const { return eof; }
+
+inline void InText::readEndl(PhysicalInStream&) {}
 
 /**
  * @class InBinary
@@ -621,7 +625,7 @@ protected:
    * In fact, the function does nothing.
    * @param stream A stream to read from.
    */
-  void readEndl(PhysicalInStream&) override {}
+  void readEndl(PhysicalInStream& stream) override;
 
   /**
    * The function reads a number of bytes from a stream.
@@ -646,6 +650,8 @@ protected:
     stream.skipInStream(size);
   }
 };
+
+inline void InBinary::readEndl(PhysicalInStream&) {}
 
 /**
  * @class InMemory
@@ -801,10 +807,10 @@ private:
     Entry& e = stack.back();
     if(e.value)
     {
-      const SimpleMap::Literal* literal = dynamic_cast<const SimpleMap::Literal*>(e.value);
+      const auto* literal = dynamic_cast<const SimpleMap::Literal*>(e.value);
       if(literal)
       {
-        In& stream = *literal;
+        InTextMemory stream(literal->c_str(), literal->length());
         stream >> value;
         if(!stream.eof())
           printError("wrong format");
@@ -821,10 +827,9 @@ protected:
    */
   InMap(bool showErrors) : showErrors(showErrors) {}
 
-  ~InMap()
+  ~InMap() override
   {
-    if(map != nullptr)
-      delete map;
+    delete map;
   }
 
   /** No assignment operator. */
@@ -845,17 +850,17 @@ protected:
   /**
    * Virtual redirection for operator>>(char& value).
    */
-  void inChar(char& value) override;
+  void inChar(char& value) override {in(value);}
 
   /**
-   * Virtual redirection for operator>>(unsigend char& value).
+   * Virtual redirection for operator>>(unsigned char& value).
    */
-  void inSChar(signed char& value) override;
+  void inSChar(signed char& value) override {in(value);}
 
   /**
-   * Virtual redirection for operator>>(unsigend char& value).
+   * Virtual redirection for operator>>(unsigned char& value).
    */
-  void inUChar(unsigned char& value) override;
+  void inUChar(unsigned char& value) override {in(value);}
 
   /**
    * Virtual redirection for operator>>(short& value).
@@ -863,17 +868,17 @@ protected:
   void inShort(short& value) override {in(value);}
 
   /**
-   * Virtual redirection for operator>>(unsigend short& value).
+   * Virtual redirection for operator>>(unsigned short& value).
    */
   void inUShort(unsigned short& value) override {in(value);}
 
   /**
    * Virtual redirection for operator>>(int& value).
    */
-  void inInt(int& value) override;
+  void inInt(int& value) override {in(value);}
 
   /**
-   * Virtual redirection for operator>>(unsigend int& value).
+   * Virtual redirection for operator>>(unsigned int& value).
    */
   void inUInt(unsigned int& value) override;
 
@@ -937,9 +942,7 @@ public:
    * This is only the case if the file does not exist or
    * reading failed.
    */
-  bool eof() const override {return (const SimpleMap::Value*) *map == 0;}
-
-  friend class DebugDataStreamer; // needs access to printError to report suppressible error message
+  bool eof() const override {return (const SimpleMap::Value*) *map == nullptr;}
 };
 
 /**

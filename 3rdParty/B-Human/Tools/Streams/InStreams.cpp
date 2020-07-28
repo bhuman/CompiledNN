@@ -61,7 +61,7 @@ void InText::readString(std::string& value, PhysicalInStream& stream)
 void InText::readData(void* p, size_t size, PhysicalInStream& stream)
 {
   for(size_t i = 0; i < size; ++i)
-    readChar(*((char*&)p)++, stream);
+    readChar(*reinterpret_cast<char*&>(p)++, stream);
 }
 
 bool InText::isWhitespace()
@@ -232,9 +232,9 @@ bool InText::expectString(const std::string& str, PhysicalInStream& stream)
 
 void InMemory::readFromStream(void* p, size_t size)
 {
-  if(memory != 0)
+  if(memory)
   {
-    memcpy(p, memory, size);
+    std::memcpy(p, memory, size);
     memory += size;
   }
 }
@@ -250,103 +250,21 @@ void InMap::printError(const std::string& msg)
 {
   if(showErrors)
   {
-    std::string path = "";
-    for(std::vector<Entry>::const_iterator i = stack.begin(); i != stack.end(); ++i)
+    std::string path;
+    for(const auto& entry : stack)
     {
-      if(i->key)
+      if(entry.key)
       {
-        if(path != "")
+        if(!path.empty())
           path += '.';
-        path += i->key;
+        path += entry.key;
       }
       else
-      {
-        char buf[20];
-        sprintf(buf, "[%d]", i->type);
-        path += buf;
-      }
+        path += '[' + std::to_string(entry.type) + ']';
     }
     static_cast<void>(msg);
-    FAIL(name << (name == "" || path == "" ? "" : ", ") <<
-         path << (name == "" && path == "" ? "" : ": ") << msg);
-  }
-}
-
-void InMap::inChar(char& value)
-{
-  Entry& e = stack.back();
-  if(e.value)
-  {
-    const SimpleMap::Literal* literal = dynamic_cast<const SimpleMap::Literal*>(e.value);
-    if(literal)
-    {
-      In& stream = *literal;
-      int i;
-      stream >> i;
-      value = static_cast<char>(i);
-      if(!stream.eof())
-        printError("wrong format");
-    }
-    else
-      printError("literal expected");
-  }
-}
-
-void InMap::inSChar(signed char& value)
-{
-  Entry& e = stack.back();
-  if(e.value)
-  {
-    const SimpleMap::Literal* literal = dynamic_cast<const SimpleMap::Literal*>(e.value);
-    if(literal)
-    {
-      In& stream = *literal;
-      int i;
-      stream >> i;
-      value = static_cast<signed char>(i);
-      if(!stream.eof())
-        printError("wrong format");
-    }
-    else
-      printError("literal expected");
-  }
-}
-
-void InMap::inUChar(unsigned char& value)
-{
-  Entry& e = stack.back();
-  if(e.value)
-  {
-    const SimpleMap::Literal* literal = dynamic_cast<const SimpleMap::Literal*>(e.value);
-    if(literal)
-    {
-      In& stream = *literal;
-      unsigned i;
-      stream >> i;
-      value = static_cast<unsigned char>(i);
-      if(!stream.eof())
-        printError("wrong format");
-    }
-    else
-      printError("literal expected");
-  }
-}
-
-void InMap::inInt(int& value)
-{
-  Entry& e = stack.back();
-  if(e.value)
-  {
-    const SimpleMap::Literal* literal = dynamic_cast<const SimpleMap::Literal*>(e.value);
-    if(literal)
-    {
-      In& stream = *literal;
-      stream >> value;
-      if(!stream.eof())
-        printError("wrong format");
-    }
-    else
-      printError("literal expected");
+    FAIL(name << (name.empty() || path.empty() ? "" : ", ") <<
+         path << (name.empty() && path.empty() ? "" : ": ") << msg);
   }
 }
 
@@ -357,7 +275,7 @@ void InMap::inUInt(unsigned int& value)
   {
     if(e.value)
     {
-      const SimpleMap::Array* array = dynamic_cast<const SimpleMap::Array*>(e.value);
+      const auto* array = dynamic_cast<const SimpleMap::Array*>(e.value);
       if(array)
         value = static_cast<unsigned>(array->size());
       else
@@ -366,19 +284,8 @@ void InMap::inUInt(unsigned int& value)
     else
       value = 0;
   }
-  else if(e.value)
-  {
-    const SimpleMap::Literal* literal = dynamic_cast<const SimpleMap::Literal*>(e.value);
-    if(literal)
-    {
-      In& stream = *literal;
-      stream >> value;
-      if(!stream.eof())
-        printError("wrong format");
-    }
-    else
-      printError("literal expected");
-  }
+  else
+    in(value);
 }
 
 void InMap::read(void*, size_t)
@@ -399,44 +306,44 @@ void InMap::select(const char* name, int type, const char* enumType)
   Streaming::trimName(name);
   const SimpleMap::Value* value = stack.empty() ? (const SimpleMap::Value*) *map : stack.back().value;
   if(!value) // invalid
-    stack.push_back(Entry(name, 0, type, enumType)); // add more invalid
+    stack.emplace_back(name, nullptr, type, enumType); // add more invalid
   else if(type >= 0) // array element
   {
-    const SimpleMap::Array* array = dynamic_cast<const SimpleMap::Array*>(value);
+    const auto* array = dynamic_cast<const SimpleMap::Array*>(value);
     if(array)
     {
       if(type < static_cast<int>(array->size()))
-        stack.push_back(Entry(name, (*array)[type], type, enumType));
+        stack.emplace_back(name, (*array)[type], type, enumType);
       else
       {
         printError("array index out of range");
-        stack.push_back(Entry(name, 0, type, enumType)); // add invalid
+        stack.emplace_back(name, nullptr, type, enumType); // add invalid
       }
     }
     else
     {
       printError("array expected");
-      stack.push_back(Entry(name, 0, type, enumType)); // add invalid
+      stack.emplace_back(name, nullptr, type, enumType); // add invalid
     }
   }
   else // record element
   {
-    const SimpleMap::Record* record = dynamic_cast<const SimpleMap::Record*>(value);
+    const auto* record = dynamic_cast<const SimpleMap::Record*>(value);
     if(record)
     {
-      SimpleMap::Record::const_iterator i = record->find(name);
+      auto i = record->find(name);
       if(i != record->end())
-        stack.push_back(Entry(name, i->second, type, enumType));
+        stack.emplace_back(name, i->second, type, enumType);
       else
       {
         printError(std::string("attribute '") + name + "' not found");
-        stack.push_back(Entry(name, 0, type, enumType)); // add invalid
+        stack.emplace_back(name, nullptr, type, enumType); // add invalid
       }
     }
     else
     {
       printError("record expected");
-      stack.push_back(Entry(name, 0, type, enumType)); // add invalid
+      stack.emplace_back(name, nullptr, type, enumType); // add invalid
     }
   }
 }

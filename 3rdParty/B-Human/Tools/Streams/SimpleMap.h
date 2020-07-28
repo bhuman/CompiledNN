@@ -18,7 +18,7 @@
  * literal ::= '"' { anychar1 } '"' | { anychar2 }
  *
  * anychar1 must escape double quotes and backslash with a backslash
- * anychar2 cannot contain whitespace and other characters used by the grammar.
+ * anychar2 cannot contain characters used by the grammar.
  *
  * @author Thomas Röfer
  */
@@ -45,36 +45,24 @@ public:
   };
 
   /** A class representing a literal. */
-  class Literal : public Value
+  class Literal : public Value, public std::string
   {
-  private:
-    std::string literal; /**< The literal. */
-    mutable In* stream = nullptr; /**< A stream that can parse the literal. */
-
   public:
-    Literal(const std::string& literal) : literal(literal) {}
-
-    ~Literal()
-    {
-      if(stream)
-        delete stream;
-    }
-
-    operator In&() const; /**< Returns a stream that can parse the literal. */
+    Literal(const std::string& literal) : std::string(literal) {}
   };
 
   /** A class representing a record of attributes, i.e. a mapping of names to values. */
   class Record : public Value, public std::unordered_map<std::string, Value*>
   {
   public:
-    ~Record();
+    ~Record() override;
   };
 
   /**< A class representing an array of values, i.e. a mapping of indices to values. */
   class Array : public Value, public std::vector<Value*>
   {
   public:
-    ~Array();
+    ~Array() override;
   };
 
   /**
@@ -104,12 +92,12 @@ private:
   };
 
   In& stream; /**< The stream from which is read. */
-  char c; /**< The current character. 0 means EOF reached. */
-  int row; /**< The current row in the stream. */
-  int column; /**< The current column in the stream. */
-  Symbol symbol; /**< The current lexicographical symbol. */
+  char c = 0; /**< The current character. 0 means EOF reached. */
+  int row = 1; /**< The current row in the stream. */
+  int column = 0; /**< The current column in the stream. */
+  Symbol symbol = eof; /**< The current lexicographical symbol. */
   std::string string; /**< The string if the current symbol is "literal". */
-  Value* root; /**< The root of the syntax tree. 0 if parsing failed. */
+  Value* root = nullptr; /**< The root of the syntax tree. 0 if parsing failed. */
   const bool jsonMode; /**< Whether the parser should be in JSON(-like) mode. */
 
   void nextChar(); /**< Read the next character into "c". */

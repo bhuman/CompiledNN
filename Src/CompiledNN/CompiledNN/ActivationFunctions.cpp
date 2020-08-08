@@ -282,7 +282,7 @@ namespace NeuralNetwork
       }
       else
       {
-        for(const x86::Xmm value : values)
+        for(const x86::Xmm& value : values)
         {
           const x86::Xmm reg = spares.size() > 3 ? spares[3] : spares[2];
           if(single)

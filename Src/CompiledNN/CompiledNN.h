@@ -191,7 +191,7 @@ namespace NeuralNetwork
     /**
      * Returns a reference to an output tensor of the compiled net.
      * Reshaping the tensor will result in undefined behavior.
-     * Also not that calling input() invalidates this tensor.
+     * Also note that calling input() invalidates this tensor.
      */
     inline TensorXf& output(std::size_t index)
     {

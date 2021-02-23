@@ -442,7 +442,7 @@ namespace NeuralNetwork
 
         if(layer.method == PoolingMethod::average)
         {
-          const float imageSize = static_cast<const float>(input.dims(0) * input.dims(1));
+          const float imageSize = static_cast<float>(input.dims(0) * input.dims(1));
           for(unsigned int outputChannel = 0; outputChannel < output.dims(0); outputChannel++)
             output(outputChannel) = static_cast<float>(outputSums[outputChannel]) / imageSize;
         }

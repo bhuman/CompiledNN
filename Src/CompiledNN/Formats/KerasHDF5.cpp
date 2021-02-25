@@ -836,7 +836,7 @@ namespace NeuralNetwork
       return;
     }
 
-    ASSERT(className == "Model"); // Model subclassing will probably never be supported.
+    ASSERT(className == "Model" || className == "Functional"); // Model subclassing will probably never be supported.
 
     // Here we are in the functional (`Model`) case again.
     const SimpleMap::Record* config = getRecordEntry<SimpleMap::Record>(root, "config");

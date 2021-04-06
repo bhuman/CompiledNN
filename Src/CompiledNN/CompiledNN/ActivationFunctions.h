@@ -44,9 +44,9 @@ namespace NeuralNetwork
     class ReluParameters : public ActivationFunctionParameters
     {
     public:
-      const float maxValue = 0.f;
+      const float maxValue = std::numeric_limits<float>::max();
       const float negativeSlope = 0.f;
-      const float threshold = std::numeric_limits<float>::max();
+      const float threshold = 0.f;
 
       ReluParameters() = default;
       ReluParameters(const float maxValue, const float negativeSlope, const float threshold) : maxValue(maxValue), negativeSlope(negativeSlope), threshold(threshold) {}

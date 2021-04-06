@@ -44,11 +44,11 @@ namespace NeuralNetwork
     class ReluParameters : public ActivationFunctionParameters
     {
     public:
-      const float maxValue;
-      const float negativeSlope;
-      const float threshold;
+      const float maxValue = 0.f;
+      const float negativeSlope = 0.f;
+      const float threshold = std::numeric_limits<float>::max();
 
-      ReluParameters() : maxValue(std::numeric_limits<float>::max()), negativeSlope(0.f), threshold(0.f) {}
+      ReluParameters() = default;
       ReluParameters(const float maxValue, const float negativeSlope, const float threshold) : maxValue(maxValue), negativeSlope(negativeSlope), threshold(threshold) {}
 
       bool operator==(const ActivationFunctionParameters* other) const override
@@ -61,9 +61,9 @@ namespace NeuralNetwork
     class EluParameters : public ActivationFunctionParameters
     {
     public:
-      const float alpha;
+      const float alpha = 1.f;
 
-      EluParameters() : alpha(1.f) {}
+      EluParameters() = default;
       EluParameters(const float alpha) : alpha(alpha) {}
 
       bool operator==(const ActivationFunctionParameters* other) const override
@@ -84,8 +84,7 @@ namespace NeuralNetwork
       ActivationFunctionDescriptor(const CompiledActivationFunctionId id, const ActivationFunctionParameters& p) : id(id), p(createParameters(id, &p)) {}
       ~ActivationFunctionDescriptor()
       {
-        if(p)
-          delete p;
+        delete p;
       }
 
       bool operator==(const CompiledActivationFunctionId id) const
@@ -115,8 +114,12 @@ namespace NeuralNetwork
 
       ActivationFunctionDescriptor& operator=(const ActivationFunctionDescriptor& other)
       {
-        *const_cast<CompiledActivationFunctionId*>(&id) = other.id;
-        *const_cast<const ActivationFunctionParameters**>(&p) = createParameters(other.id, other.p);
+        if(this != &other)
+        {
+          delete p;
+          const_cast<CompiledActivationFunctionId&>(id) = other.id;
+          const_cast<const ActivationFunctionParameters*&>(p) = createParameters(other.id, other.p);
+        }
         return *this;
       }
 

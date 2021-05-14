@@ -166,27 +166,37 @@ namespace NeuralNetwork
       for(unsigned int step = 0; step < stepSize; step++)
         a.xorps(x86::xmm(step), x86::xmm(step));
 
+      const bool filterRowLoopNeeded = p.weights->dims(0) > 1;
+      const bool filterColLoopNeeded = (p.weights->dims(1) * p.weights->dims(2) / 4) > 1;
+
       // Begin loop over weight rows
       Label filterRowLoop;
-      if(p.weights->dims(0) > 1)
+      if(filterRowLoopNeeded)
       {
         filterRowLoop = a.newLabel();
-        a.mov(p.weights->dims(1) * p.weights->dims(2) > 4 ? a.zax() : a.zcx(), imm(p.weights->dims(0)));
+        a.mov(filterColLoopNeeded ? a.zax() : a.zcx(), imm(p.weights->dims(0)));
         a.bind(filterRowLoop);
       }
 
       if(p.weights->dims(1) * p.weights->dims(2) > 4)
       {
         // Begin loop over weight cols
-        Label filterColLoop = a.newLabel();
-        a.mov(a.zcx(), imm(p.weights->dims(1) * p.weights->dims(2) / 4));
-        a.bind(filterColLoop);
+        Label filterColLoop;
+        if(filterColLoopNeeded)
+        {
+          filterColLoop = a.newLabel();
+          a.mov(a.zcx(), imm(p.weights->dims(1) * p.weights->dims(2) / 4));
+          a.bind(filterColLoop);
+        }
 
         compileFilter(a, inputAligned, remainingOutputs, 4);
 
         // End loop over weight cols
-        a.dec(a.zcx());
-        a.jnz(filterColLoop);
+        if(filterColLoopNeeded)
+        {
+          a.dec(a.zcx());
+          a.jnz(filterColLoop);
+        }
       }
 
       const unsigned int remainingInput = p.weights->dims(1) * p.weights->dims(2) == 4 ? 4 : ((p.weights->dims(1) * p.weights->dims(2)) % 4);
@@ -194,12 +204,12 @@ namespace NeuralNetwork
         compileFilter(a, inputAligned, remainingOutputs, remainingInput, true);
 
       // End loop over weight rows
-      if(p.weights->dims(0) > 1)
+      if(filterRowLoopNeeded)
       {
         // Set input pointer to next row
         a.add(a.zdx(), imm(((inputWidth - p.weights->dims(1)) * p.weights->dims(2) + remainingInput) * sizeof(float)));
 
-        a.dec(p.weights->dims(1) * p.weights->dims(2) > 4 ? a.zax() : a.zcx());
+        a.dec(filterColLoopNeeded ? a.zax() : a.zcx());
         a.jnz(filterRowLoop);
       }
 

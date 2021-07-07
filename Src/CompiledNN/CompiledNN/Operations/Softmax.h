@@ -15,6 +15,11 @@ namespace NeuralNetwork
       struct Parameters final
       {
         unsigned int dimension;
+
+        bool operator==(const Parameters& other) const
+        {
+          return dimension == other.dimension;
+        }
       };
       const Parameters p;
 

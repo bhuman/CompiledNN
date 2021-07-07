@@ -16,6 +16,11 @@ namespace NeuralNetwork
       struct Parameters final
       {
         const BatchNormalizationCompiler::Parameters* batchNormalization = nullptr;
+
+        bool operator==(const Parameters& other) const
+        {
+          return batchNormalization == other.batchNormalization;
+        }
       };
       const Parameters p;
 

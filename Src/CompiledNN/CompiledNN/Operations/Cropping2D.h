@@ -15,6 +15,11 @@ namespace NeuralNetwork
       struct Parameters final
       {
         std::array<unsigned int, 4> cropping;
+
+        bool operator==(const Parameters& other) const
+        {
+          return cropping == other.cropping;
+        }
       };
       const Parameters p;
 

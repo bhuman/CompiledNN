@@ -16,6 +16,12 @@ namespace NeuralNetwork
       {
         std::array<unsigned int, 2> size;
         InterpolationMethod method;
+
+        bool operator==(const Parameters& other) const
+        {
+          return size == other.size &&
+                 method == other.method;
+        }
       };
       const Parameters p;
 

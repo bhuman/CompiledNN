@@ -16,6 +16,11 @@ namespace NeuralNetwork
       struct Parameters final
       {
         ActivationFunctionDescriptor activationDesc;
+
+        bool operator==(const Parameters& other) const
+        {
+          return activationDesc == other.activationDesc;
+        }
       };
       const Parameters p;
 

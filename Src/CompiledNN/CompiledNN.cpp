@@ -9,7 +9,6 @@
 #include "CompiledNN.h"
 #include "CompiledNN/CompiledNNImpl.h"
 #include "Model.h"
-#include <cstring>
 #include <numeric>
 #include <unordered_map>
 
@@ -37,7 +36,7 @@ namespace NeuralNetwork
   {
     CompilerList& compilerType = compilers[typeid(CompilerType)];
     for(const std::unique_ptr<OperationCompiler>& compiler : compilerType)
-      if(!std::memcmp(&static_cast<CompilerType*>(compiler.get())->p, &p, sizeof(p)))
+      if(static_cast<CompilerType*>(compiler.get())->p == p)
       {
         ++compiler->refCount;
         return compiler.get();

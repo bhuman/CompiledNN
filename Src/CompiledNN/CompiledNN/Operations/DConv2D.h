@@ -16,6 +16,12 @@ namespace NeuralNetwork
       {
         const Tensor<float, 1>* weights;
         std::array<unsigned int, 2> strides;
+
+        bool operator==(const Parameters& other) const
+        {
+          return weights == other.weights &&
+                 strides == other.strides;
+        }
       };
       const Parameters p;
 

@@ -16,6 +16,12 @@ namespace NeuralNetwork
       {
         PoolingMethod method;
         unsigned int imageSize = 0;
+
+        bool operator==(const Parameters& other) const
+        {
+          return method == other.method &&
+                 imageSize == other.imageSize;
+        }
       };
       const Parameters p;
 

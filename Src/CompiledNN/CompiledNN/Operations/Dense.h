@@ -25,6 +25,16 @@ namespace NeuralNetwork
         const std::vector<float>* biases;
         ActivationFunctionDescriptor activationDesc;
         ActivationFunctionDescriptor postActivation;
+
+        bool operator==(const Parameters& other) const
+        {
+          return preBatchNormalization == other.preBatchNormalization &&
+                 postBatchNormalization == other.postBatchNormalization &&
+                 weights == other.weights &&
+                 biases == other.biases &&
+                 activationDesc == other.activationDesc &&
+                 postActivation == other.postActivation;
+        }
       };
       const Parameters p;
 

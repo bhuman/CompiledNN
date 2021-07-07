@@ -22,6 +22,16 @@ namespace NeuralNetwork
         std::array<unsigned int, 2> strides;
         ActivationFunctionDescriptor activationDesc;
         ActivationFunctionDescriptor postActivation;
+
+        bool operator==(const Parameters& other) const
+        {
+          return batchNormalization == other.batchNormalization &&
+                 weights == other.weights &&
+                 biases == other.biases &&
+                 strides == other.strides &&
+                 activationDesc == other.activationDesc &&
+                 postActivation == other.postActivation;
+        }
       };
       const Parameters p;
 

@@ -25,6 +25,12 @@ namespace NeuralNetwork
       {
         unsigned int inputSize = 0;
         OperationType op;
+
+        bool operator==(const Parameters& other) const
+        {
+          return inputSize == other.inputSize &&
+                 op == other.op;
+        }
       };
       const Parameters p;
       ArithmeticCompiler(const CompilationSettings& settings, const Parameters& p) : OperationCompiler(settings), p(p) {}

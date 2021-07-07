@@ -18,6 +18,14 @@ namespace NeuralNetwork
         const std::vector<float>* offset;
         unsigned int dimension;
         unsigned int inputSize;
+
+        bool operator==(const Parameters& other) const
+        {
+          return factor == other.factor &&
+                 offset == other.offset &&
+                 dimension == other.dimension &&
+                 inputSize == other.inputSize;
+        }
       };
       const Parameters p;
 

@@ -18,6 +18,14 @@ namespace NeuralNetwork
         std::array<unsigned int, 2> strides;
         PoolingMethod method;
         PaddingType padding;
+
+        bool operator==(const Parameters& other) const
+        {
+          return kernelSize == other.kernelSize &&
+                 strides == other.strides &&
+                 method == other.method &&
+                 padding == other.padding;
+        }
       };
       const Parameters p;
 

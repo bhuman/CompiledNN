@@ -307,8 +307,6 @@ namespace NeuralNetwork
         // Load filter base address
         a.lea(a.zbx(), x86::ptr(weights.label));
 
-        biasOffset = 0;
-
         if(p.weights->dims(2) > outputBatchSize)
         {
           // Begin loop over output batches (only construct loop if it has more than one iteration)

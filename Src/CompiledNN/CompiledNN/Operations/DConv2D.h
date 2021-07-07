@@ -42,7 +42,6 @@ namespace NeuralNetwork
       }
 
     private:
-      mutable unsigned int biasOffset = 0;
       unsigned int outputBatchSize = 0;
 
       void compileFilter(x86::Assembler& a, const bool inputAligned, const unsigned int remainingOutputs, const unsigned int remainingInput, const bool lastFilter = false) const;

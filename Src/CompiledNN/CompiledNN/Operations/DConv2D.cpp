@@ -74,15 +74,25 @@ namespace NeuralNetwork
 
         if(step == stepSize - 1 && remainingOutputs % 4 == 1)
         {
-          a.movss(x86::xmm(settings.xmmRegs() - 2), a.ptr_zbx(filterOffset));
-          a.mulss(x86::xmm(settings.xmmRegs() - 2), x86::xmm(settings.xmmRegs() - 1));
-          a.addss(x86::xmm(step), x86::xmm(settings.xmmRegs() - 2));
+          if(settings.useFMA3)
+            a.vfmadd231ss(x86::xmm(step), x86::xmm(settings.xmmRegs() - 1), a.ptr_zbx(filterOffset));
+          else
+          {
+            a.movss(x86::xmm(settings.xmmRegs() - 2), a.ptr_zbx(filterOffset));
+            a.mulss(x86::xmm(settings.xmmRegs() - 2), x86::xmm(settings.xmmRegs() - 1));
+            a.addss(x86::xmm(step), x86::xmm(settings.xmmRegs() - 2));
+          }
         }
         else
         {
-          a.movaps(x86::xmm(settings.xmmRegs() - 2), a.ptr_zbx(filterOffset));
-          a.mulps(x86::xmm(settings.xmmRegs() - 2), x86::xmm(settings.xmmRegs() - 1));
-          a.addps(x86::xmm(step), x86::xmm(settings.xmmRegs() - 2));
+          if(settings.useFMA3)
+            a.vfmadd231ps(x86::xmm(step), x86::xmm(settings.xmmRegs() - 1), a.ptr_zbx(filterOffset));
+          else
+          {
+            a.movaps(x86::xmm(settings.xmmRegs() - 2), a.ptr_zbx(filterOffset));
+            a.mulps(x86::xmm(settings.xmmRegs() - 2), x86::xmm(settings.xmmRegs() - 1));
+            a.addps(x86::xmm(step), x86::xmm(settings.xmmRegs() - 2));
+          }
         }
         filterOffset += 4 * sizeof(float);
         a.add(a.zdx(), imm(4 * sizeof(float)));

@@ -12,6 +12,7 @@ namespace NeuralNetwork
     bool useX64 = true;    /**< use x64 features (additional XMM registers) */
     bool useSSE42 = true;  /**< use SSE features up to 4.2 as supported by NAO V6 (else SSSE3 is used as the max version) */
     bool useAVX2 = true;   /**< use AVX and AVX2 features (not supported by NAOs) */
+    bool useFMA3 = true;   /**< use FMA3 features (not supported by NAOs) */
 
     // Optimizations
     bool useExpApproxInSigmoid = true;  /**< use a less accurate but faster approximation of sigmoid */

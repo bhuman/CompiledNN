@@ -19,4 +19,7 @@ void NeuralNetwork::CompilationSettings::constrict()
 
   if(useAVX2 && !cpuInfo.features<x86::Features>().hasAVX2())
     useAVX2 = false;
+
+  if(useFMA3 && !cpuInfo.features<x86::Features>().hasFMA())
+    useFMA3 = false;
 }

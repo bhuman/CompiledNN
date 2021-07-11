@@ -129,7 +129,7 @@ namespace NeuralNetwork
     void Conv2DCompiler::compileOutputBatch(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int remainingOutputs) const
     {
       const NetworkConstants& biases = constants[1];
-      const bool inputAligned = (p.strides[1] * p.weights->dims(2)) % 4 == 0;
+      const bool inputAligned = p.weights->dims(2) % 4 == 0;
       const bool outputAligned = p.weights->dims(3) % 4 == 0;
       const unsigned int stepSize = (remainingOutputs + 3) / 4;
 

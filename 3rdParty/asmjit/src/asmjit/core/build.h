@@ -84,8 +84,8 @@
 // ============================================================================
 
 // We really want std-types as globals.
-#define __STDC_LIMIT_MACROS
-#define __STDC_CONSTANT_MACROS
+#define __STDC_LIMIT_MACROS // B-Human modification
+#define __STDC_CONSTANT_MACROS // B-Human modification
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -98,6 +98,7 @@
 #include <type_traits>
 #include <utility>
 
+// B-Human modification:
 #ifndef SIZE_MAX
 # ifdef __SIZE_MAX__
 #  define SIZE_MAX __SIZE_MAX__

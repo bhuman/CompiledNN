@@ -1057,6 +1057,7 @@ Error RAPass::assignArgIndexToWorkRegs() noexcept {
 // [asmjit::RAPass - Allocation - Global]
 // ============================================================================
 
+#ifndef ASMJIT_NO_LOGGING // B-Human modification
 static void RAPass_dumpSpans(String& sb, uint32_t index, const LiveRegSpans& liveSpans) noexcept {
   sb.appendFormat("  %02u: ", index);
 
@@ -1068,6 +1069,7 @@ static void RAPass_dumpSpans(String& sb, uint32_t index, const LiveRegSpans& liv
 
   sb.appendChar('\n');
 }
+#endif // B-Human modification
 
 Error RAPass::runGlobalAllocator() noexcept {
   ASMJIT_PROPAGATE(initGlobalLiveSpans());
@@ -1111,7 +1113,9 @@ ASMJIT_FAVOR_SPEED Error RAPass::binPack(uint32_t group) noexcept {
     workRegCount(group));
 
   uint32_t i;
+#ifndef ASMJIT_NO_LOGGING // B-Human modification
   uint32_t physCount = _physRegCount[group];
+#endif // B-Human modification
 
   RAWorkRegs workRegs;
   LiveRegSpans tmpSpans;

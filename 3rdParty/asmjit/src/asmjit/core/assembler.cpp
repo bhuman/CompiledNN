@@ -259,12 +259,14 @@ struct DataSizeByPower {
   char str[4];
 };
 
+#ifndef ASMJIT_NO_LOGGING // B-Human modification
 static const DataSizeByPower dataSizeByPowerTable[] = {
   { "db" },
   { "dw" },
   { "dd" },
   { "dq" }
 };
+#endif // B-Human modification
 
 Error BaseAssembler::embed(const void* data, uint32_t dataSize) {
   if (ASMJIT_UNLIKELY(!_code))

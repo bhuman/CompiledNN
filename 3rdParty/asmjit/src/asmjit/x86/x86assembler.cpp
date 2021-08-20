@@ -492,13 +492,14 @@ ASMJIT_FAVOR_SPEED Error Assembler::_emit(uint32_t instId, const Operand_& o0, c
   constexpr uint32_t kVSHR_PP    = Opcode::kPP_Shift - 16;
   constexpr uint32_t kVSHR_PP_EW = Opcode::kPP_Shift - 16;
 
+  // static_cast<uint32_t>(...) is a B-Human modification.
   constexpr uint32_t kRequiresSpecialHandling =
-    Inst::kOptionReserved | // Logging/Validation/Error.
-    Inst::kOptionRep      | // REP/REPE prefix.
-    Inst::kOptionRepne    | // REPNE prefix.
-    Inst::kOptionLock     | // LOCK prefix.
-    Inst::kOptionXAcquire | // XACQUIRE prefix.
-    Inst::kOptionXRelease ; // XRELEASE prefix.
+    static_cast<uint32_t>(Inst::kOptionReserved) | // Logging/Validation/Error.
+    static_cast<uint32_t>(Inst::kOptionRep)      | // REP/REPE prefix.
+    static_cast<uint32_t>(Inst::kOptionRepne)    | // REPNE prefix.
+    static_cast<uint32_t>(Inst::kOptionLock)     | // LOCK prefix.
+    static_cast<uint32_t>(Inst::kOptionXAcquire) | // XACQUIRE prefix.
+    static_cast<uint32_t>(Inst::kOptionXRelease) ; // XRELEASE prefix.
 
   Error err;
 

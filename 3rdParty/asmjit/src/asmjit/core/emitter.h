@@ -363,6 +363,8 @@ public:
 
   #define OP const Operand_&
   #define NONE Globals::none
+
+  // B-Human modification:
 #ifdef emit
   #undef emit
 #endif

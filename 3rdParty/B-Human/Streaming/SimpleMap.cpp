@@ -6,7 +6,7 @@
  * map ::= record
  * record ::= field ';' { field ';' }
  * field ::= literal '=' ( literal | '{' record '}' | array )
- * array ::= '[' [ ( literal | '{' record '}' ) { ',' ( literal | '{' record '}' ) } [ ',' ] ']'
+ * array ::= '[' [ ( literal | '{' record '}' ) { ',' ( literal | '{' record '}' ) } [ ',' ] ] ']'
  * literal ::= '"' { anychar1 } '"' | { anychar2 }
  *
  * It can also parse a JSON-like format, which has the following grammar:
@@ -14,7 +14,7 @@
  * map ::= record
  * record ::= '{' field { ',' field } [ ',' ] '}'
  * field ::= literal ':' ( literal | record | array )
- * array ::= '[' [ ( literal | record | array ) { ',' ( literal | record | array ) } [ ',' ] ']'
+ * array ::= '[' [ ( literal | record | array ) { ',' ( literal | record | array ) } [ ',' ] ] ']'
  * literal ::= '"' { anychar1 } '"' | { anychar2 }
  *
  * anychar1 must escape double quotes and backslash with a backslash
@@ -24,8 +24,8 @@
  */
 
 #include "SimpleMap.h"
-#include <stdexcept>
 #include "Platform/BHAssert.h"
+#include <stdexcept>
 
 SimpleMap::Record::~Record()
 {
@@ -143,8 +143,8 @@ void SimpleMap::nextSymbol()
           continue; // jump back to skipping whitespace
         }
         string = "/";
-        // no break;
       [[fallthrough]];
+
       default:
         while(c && c != '=' && c != ',' && c != ';' && c != ']' && c != '}')
         {

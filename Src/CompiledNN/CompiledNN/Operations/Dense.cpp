@@ -4,8 +4,8 @@
 
 #include "Dense.h"
 #include "../ActivationFunctions.h"
+#include "MathBase/NeumaierSum.h"
 #include "Platform/BHAssert.h"
-#include "Tools/Math/NeumaierSum.h"
 
 namespace NeuralNetwork
 {

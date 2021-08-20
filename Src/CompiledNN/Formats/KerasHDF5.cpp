@@ -8,8 +8,8 @@
 
 #include "KerasHDF5.h"
 #include "Platform/BHAssert.h"
-#include "Tools/Streams/InStreams.h"
-#include "Tools/Streams/SimpleMap.h"
+#include "Streaming/InStreams.h"
+#include "Streaming/SimpleMap.h"
 #include <hdf5.h>
 #include <cmath>
 #include <cstring>

@@ -8,8 +8,8 @@
  */
 
 #include "SimpleNN.h"
+#include "MathBase/NeumaierSum.h"
 #include "Platform/BHAssert.h"
-#include "Tools/Math/NeumaierSum.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>

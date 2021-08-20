@@ -1,5 +1,5 @@
 /**
- * @file Platform/BHAssert.h
+ * @file BHAssert.h
  * This file contains macros for low level debugging
  * @author Thomas Röfer
  * @author Colin Graf
@@ -20,7 +20,6 @@
 class Assert
 {
 public:
-#ifndef NDEBUG
   /**
    * Prints a formated message to stdout
    * @param file The name of the current file (__FILE__)
@@ -34,7 +33,6 @@ public:
    * Aborts the execution of the program
    */
   static void abort();
-#endif // NDEBUG
 };
 
 /**
@@ -43,11 +41,9 @@ public:
  * @param c The condition to be checked.
  */
 #ifdef NDEBUG
-#define ASSERT(cond) ((void)0)
-#elif defined _WIN32
-#define ASSERT(cond) ((void)((cond) ? 0 : (Assert::abort(), 0)))
+#define ASSERT(cond) static_cast<void>(0)
 #else
-#define ASSERT(cond) ((void)((cond) ? 0 : (Assert::print(__FILE__, __LINE__, "ASSERT(%s) failed", #cond), Assert::abort(), 0)))
+#define ASSERT(cond) static_cast<void>((cond) ? 0 : (Assert::print(__FILE__, __LINE__, "ASSERT(%s) failed", #cond), Assert::abort(), 0))
 #endif
 
 /**
@@ -55,7 +51,7 @@ public:
  * This text is passed into a std::stringstream, thus FAIL("error " << 1) is a valid expression.
  */
 #ifdef NDEBUG
-#define FAIL(text) ((void)0)
+#define FAIL(text) static_cast<void>(0)
 #else
 #define FAIL(text) \
   do \
@@ -74,9 +70,7 @@ public:
  * @param c The condition to be checked.
  */
 #ifdef NDEBUG
-#define VERIFY(cond) ((void)(cond))
-#elif defined _WIN32
-#define VERIFY(cond) ((void)((cond) ? 0 : (Assert::abort(), 0)))
+#define VERIFY(cond) static_cast<void>(cond)
 #else
-#define VERIFY(cond) ((void)((cond) ? 0 : (Assert::print(__FILE__, __LINE__, "VERIFY(%s) failed", #cond), Assert::abort(), 0)))
+#define VERIFY(cond) static_cast<void>((cond) ? 0 : (Assert::print(__FILE__, __LINE__, "VERIFY(%s) failed", #cond), Assert::abort(), 0))
 #endif

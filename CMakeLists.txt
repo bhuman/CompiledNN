@@ -158,16 +158,16 @@ add_library(CompiledNN
     3rdParty/asmjit/src/asmjit/x86/x86rapass.cpp
     3rdParty/asmjit/src/asmjit/x86/x86rapass_p.h
 
+    3rdParty/B-Human/MathBase/BHMath.h
+    3rdParty/B-Human/MathBase/NeumaierSum.h
     3rdParty/B-Human/Platform/BHAssert.cpp
     3rdParty/B-Human/Platform/BHAssert.h
-    3rdParty/B-Human/Tools/Math/BHMath.h
-    3rdParty/B-Human/Tools/Math/NeumaierSum.h
-    3rdParty/B-Human/Tools/Streams/InOut.cpp
-    3rdParty/B-Human/Tools/Streams/InOut.h
-    3rdParty/B-Human/Tools/Streams/InStreams.cpp
-    3rdParty/B-Human/Tools/Streams/InStreams.h
-    3rdParty/B-Human/Tools/Streams/SimpleMap.cpp
-    3rdParty/B-Human/Tools/Streams/SimpleMap.h
+    3rdParty/B-Human/Streaming/InOut.cpp
+    3rdParty/B-Human/Streaming/InOut.h
+    3rdParty/B-Human/Streaming/InStreams.cpp
+    3rdParty/B-Human/Streaming/InStreams.h
+    3rdParty/B-Human/Streaming/SimpleMap.cpp
+    3rdParty/B-Human/Streaming/SimpleMap.h
 )
 
 target_compile_options(CompiledNN PRIVATE

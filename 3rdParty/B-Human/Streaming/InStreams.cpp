@@ -7,12 +7,12 @@
  * @author Martin Lötzsch
  */
 
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
 
 #include "InStreams.h"
 #include "Platform/BHAssert.h"
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
 
 void StreamReader::skipData(size_t size, PhysicalInStream& stream)
 {
@@ -237,125 +237,4 @@ void InMemory::readFromStream(void* p, size_t size)
     std::memcpy(p, memory, size);
     memory += size;
   }
-}
-
-void InMap::parse(In& stream, const std::string& name)
-{
-  map = new SimpleMap(stream, name);
-  this->name = name;
-  stack.reserve(20);
-}
-
-void InMap::printError(const std::string& msg)
-{
-  if(showErrors)
-  {
-    std::string path;
-    for(const auto& entry : stack)
-    {
-      if(entry.key)
-      {
-        if(!path.empty())
-          path += '.';
-        path += entry.key;
-      }
-      else
-        path += '[' + std::to_string(entry.type) + ']';
-    }
-    static_cast<void>(msg);
-    FAIL(name << (name.empty() || path.empty() ? "" : ", ") <<
-         path << (name.empty() && path.empty() ? "" : ": ") << msg);
-  }
-}
-
-void InMap::inUInt(unsigned int& value)
-{
-  Entry& e = stack.back();
-  if(e.type == -1)
-  {
-    if(e.value)
-    {
-      const auto* array = dynamic_cast<const SimpleMap::Array*>(e.value);
-      if(array)
-        value = static_cast<unsigned>(array->size());
-      else
-        printError("array expected");
-    }
-    else
-      value = 0;
-  }
-  else
-    in(value);
-}
-
-void InMap::read(void*, size_t)
-{
-  FAIL("Unsupported operation.");
-}
-
-void InMap::skip(size_t)
-{
-  FAIL("Unsupported operation.");
-}
-
-void InMap::select(const char* name, int type, const char* enumType)
-{
-  ASSERT(map);
-  ASSERT(name || type >= 0);
-
-  Streaming::trimName(name);
-  const SimpleMap::Value* value = stack.empty() ? (const SimpleMap::Value*) *map : stack.back().value;
-  if(!value) // invalid
-    stack.emplace_back(name, nullptr, type, enumType); // add more invalid
-  else if(type >= 0) // array element
-  {
-    const auto* array = dynamic_cast<const SimpleMap::Array*>(value);
-    if(array)
-    {
-      if(type < static_cast<int>(array->size()))
-        stack.emplace_back(name, (*array)[type], type, enumType);
-      else
-      {
-        printError("array index out of range");
-        stack.emplace_back(name, nullptr, type, enumType); // add invalid
-      }
-    }
-    else
-    {
-      printError("array expected");
-      stack.emplace_back(name, nullptr, type, enumType); // add invalid
-    }
-  }
-  else // record element
-  {
-    const auto* record = dynamic_cast<const SimpleMap::Record*>(value);
-    if(record)
-    {
-      auto i = record->find(name);
-      if(i != record->end())
-        stack.emplace_back(name, i->second, type, enumType);
-      else
-      {
-        printError(std::string("attribute '") + name + "' not found");
-        stack.emplace_back(name, nullptr, type, enumType); // add invalid
-      }
-    }
-    else
-    {
-      printError("record expected");
-      stack.emplace_back(name, nullptr, type, enumType); // add invalid
-    }
-  }
-}
-
-void InMap::deselect()
-{
-  stack.pop_back();
-}
-
-InMapMemory::InMapMemory(const void* memory, size_t size, bool showErrors) :
-  InMap(showErrors),
-  stream(memory, size)
-{
-  parse(stream);
 }

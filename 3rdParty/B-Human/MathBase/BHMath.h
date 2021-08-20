@@ -1,5 +1,5 @@
 /**
- * @file Tools/Math/BHMath.h
+ * @file BHMath.h
  *
  * This contains some often used mathematical definitions and functions.
  *

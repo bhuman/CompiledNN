@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include "MathBase/BHMath.h"
+#include "MathBase/NeumaierSum.h"
 #include "Platform/BHAssert.h"
-#include "Tools/Math/BHMath.h"
-#include "Tools/Math/NeumaierSum.h"
 #include <algorithm>
 #include <functional>
 #include <numeric>

@@ -894,7 +894,7 @@ namespace NeuralNetwork
     }
 
     template<bool single>
-    void softsignApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label&, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
+    void softsignApply(x86::Assembler& a, const ActivationFunctionParameters* const, const Label& label, const std::vector<x86::Xmm>& spares, const std::vector<x86::Xmm>& values)
     {
       // softsign(x) = x / (abs(x) + 1)
       const size_t constOffset = spares.size() < 2 ? 1 : spares.size() - 2;
@@ -936,14 +936,14 @@ namespace NeuralNetwork
           {
             a.movss(spares[0], value);
             a.andps(spares[0], spares[constOffset]);
-            spares.size() > 2 ? a.addss(spares[0], spares[constOffset + 1]) : a.addss(spares[0], static_cast<unsigned int>(sizeof(float)));
+            spares.size() > 2 ? a.addss(spares[0], spares[constOffset + 1]) : a.addss(spares[0], x86::ptr(label, static_cast<unsigned int>(sizeof(float))));
             a.divss(value, spares[0]);
           }
           else
           {
             a.movaps(spares[0], value);
             a.andps(spares[0], spares[constOffset]);
-            spares.size() > 2 ? a.addps(spares[0], spares[constOffset + 1]) : a.addps(spares[0], static_cast<unsigned int>(4 * sizeof(float)));
+            spares.size() > 2 ? a.addps(spares[0], spares[constOffset + 1]) : a.addps(spares[0], x86::ptr(label, static_cast<unsigned int>(4 * sizeof(float))));
             a.divps(value, spares[0]);
           }
         }

@@ -30,4 +30,9 @@
   #include "./x86.h"
 #endif
 
+// B-Human modification:
+#ifndef ASMJIT_NO_ARM
+  #include "./a64.h"
+#endif
+
 #endif // ASMJIT_ASMJIT_H_INCLUDED

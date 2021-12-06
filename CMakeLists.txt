@@ -59,11 +59,40 @@ add_library(CompiledNN
     Src/CompiledNN/CompiledNN/Util/ExpApprox.cpp
     Src/CompiledNN/CompiledNN/Util/ExpApprox.h
 
+    3rdParty/asmjit/src/asmjit/a64.h
+    3rdParty/asmjit/src/asmjit/arm.h
     3rdParty/asmjit/src/asmjit/asmjit.h
     3rdParty/asmjit/src/asmjit/asmjit-scope-begin.h
     3rdParty/asmjit/src/asmjit/asmjit-scope-end.h
     3rdParty/asmjit/src/asmjit/core.h
     3rdParty/asmjit/src/asmjit/x86.h
+    3rdParty/asmjit/src/asmjit/arm/a64assembler.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64assembler.h
+    3rdParty/asmjit/src/asmjit/arm/a64builder.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64builder.h
+    3rdParty/asmjit/src/asmjit/arm/a64compiler.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64compiler.h
+    3rdParty/asmjit/src/asmjit/arm/a64emithelper.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64emithelper_p.h
+    3rdParty/asmjit/src/asmjit/arm/a64emitter.h
+    3rdParty/asmjit/src/asmjit/arm/a64globals.h
+    3rdParty/asmjit/src/asmjit/arm/a64instapi.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64instapi_p.h
+    3rdParty/asmjit/src/asmjit/arm/a64instdb.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64instdb.h
+    3rdParty/asmjit/src/asmjit/arm/a64instdb_p.h
+    3rdParty/asmjit/src/asmjit/arm/a64operand.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64operand.h
+    3rdParty/asmjit/src/asmjit/arm/a64rapass.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64rapass_p.h
+    3rdParty/asmjit/src/asmjit/arm/a64utils.h
+    3rdParty/asmjit/src/asmjit/arm/armarchtraits_p.h
+    3rdParty/asmjit/src/asmjit/arm/armformatter.cpp
+    3rdParty/asmjit/src/asmjit/arm/armformatter_p.h
+    3rdParty/asmjit/src/asmjit/arm/armfunc.cpp
+    3rdParty/asmjit/src/asmjit/arm/armfunc_p.h
+    3rdParty/asmjit/src/asmjit/arm/armglobals.h
+    3rdParty/asmjit/src/asmjit/arm/armoperand.h
     3rdParty/asmjit/src/asmjit/core/api-build_p.h
     3rdParty/asmjit/src/asmjit/core/api-config.h
     3rdParty/asmjit/src/asmjit/core/archcommons.h
@@ -79,8 +108,8 @@ add_library(CompiledNN
     3rdParty/asmjit/src/asmjit/core/codewriter.cpp
     3rdParty/asmjit/src/asmjit/core/codewriter_p.h
     3rdParty/asmjit/src/asmjit/core/compiler.cpp
-    3rdParty/asmjit/src/asmjit/core/compilerdefs.h
     3rdParty/asmjit/src/asmjit/core/compiler.h
+    3rdParty/asmjit/src/asmjit/core/compilerdefs.h
     3rdParty/asmjit/src/asmjit/core/constpool.cpp
     3rdParty/asmjit/src/asmjit/core/constpool.h
     3rdParty/asmjit/src/asmjit/core/cpuinfo.cpp
@@ -98,10 +127,10 @@ add_library(CompiledNN
     3rdParty/asmjit/src/asmjit/core/formatter.cpp
     3rdParty/asmjit/src/asmjit/core/formatter.h
     3rdParty/asmjit/src/asmjit/core/formatter_p.h
-    3rdParty/asmjit/src/asmjit/core/funcargscontext.cpp
-    3rdParty/asmjit/src/asmjit/core/funcargscontext_p.h
     3rdParty/asmjit/src/asmjit/core/func.cpp
     3rdParty/asmjit/src/asmjit/core/func.h
+    3rdParty/asmjit/src/asmjit/core/funcargscontext.cpp
+    3rdParty/asmjit/src/asmjit/core/funcargscontext_p.h
     3rdParty/asmjit/src/asmjit/core/globals.cpp
     3rdParty/asmjit/src/asmjit/core/globals.h
     3rdParty/asmjit/src/asmjit/core/inst.cpp
@@ -218,7 +247,7 @@ target_include_directories(CompiledNN SYSTEM PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src"
 )
 target_compile_definitions(CompiledNN PRIVATE
-    ASMJIT_STATIC ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER ASMJIT_NO_DEPRECATED
+    ASMJIT_STATIC ASMJIT_NO_ARM ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER ASMJIT_NO_DEPRECATED
     ASMJIT_NO_INTROSPECTION ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_VALIDATION
 )
 target_link_libraries(CompiledNN PUBLIC

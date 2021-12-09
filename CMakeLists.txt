@@ -295,9 +295,9 @@ install(FILES
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CompiledNN/Platform"
 )
 install(FILES
-    3rdParty/B-Human/Tools/Math/BHMath.h
-    3rdParty/B-Human/Tools/Math/NeumaierSum.h
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CompiledNN/Tools/Math"
+    3rdParty/B-Human/MathBase/BHMath.h
+    3rdParty/B-Human/MathBase/NeumaierSum.h
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CompiledNN/MathBase"
 )
 
 # install targets, configuration and version files

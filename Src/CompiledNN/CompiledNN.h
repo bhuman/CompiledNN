@@ -21,7 +21,10 @@
 
 namespace asmjit
 {
-  class JitRuntime;
+  inline namespace _abi_1_8
+  {
+    class JitRuntime;
+  }
 }
 
 namespace NeuralNetwork

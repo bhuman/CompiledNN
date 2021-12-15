@@ -522,7 +522,7 @@ namespace NeuralNetwork
   {
     // Initialize assembler
     CodeHolder code;
-    code.init(runtime->codeInfo());
+    code.init(runtime->environment());
     x86::Assembler a(&code);
     CompilationErrorHandler errorHandler;
     a.setErrorHandler(&errorHandler);
@@ -604,10 +604,10 @@ namespace NeuralNetwork
         for(NetworkConstants& cs : compiler->constants)
           if(!cs.data.empty())
           {
-            a.align(AlignMode::kAlignZero, 16);
+            a.align(AlignMode::kZero, 16);
             a.bind(cs.label);
             for(const float c : cs.data)
-              a.dfloat(c);
+              a.embedFloat(c);
           }
       }
 

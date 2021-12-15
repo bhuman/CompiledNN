@@ -60,29 +60,46 @@ add_library(CompiledNN
     Src/CompiledNN/CompiledNN/Util/ExpApprox.h
 
     3rdParty/asmjit/src/asmjit/asmjit.h
+    3rdParty/asmjit/src/asmjit/asmjit-scope-begin.h
+    3rdParty/asmjit/src/asmjit/asmjit-scope-end.h
     3rdParty/asmjit/src/asmjit/core.h
     3rdParty/asmjit/src/asmjit/x86.h
-    3rdParty/asmjit/src/asmjit/core/arch.cpp
-    3rdParty/asmjit/src/asmjit/core/arch.h
+    3rdParty/asmjit/src/asmjit/core/api-build_p.h
+    3rdParty/asmjit/src/asmjit/core/api-config.h
+    3rdParty/asmjit/src/asmjit/core/archcommons.h
+    3rdParty/asmjit/src/asmjit/core/archtraits.cpp
+    3rdParty/asmjit/src/asmjit/core/archtraits.h
     3rdParty/asmjit/src/asmjit/core/assembler.cpp
     3rdParty/asmjit/src/asmjit/core/assembler.h
-    3rdParty/asmjit/src/asmjit/core/build.h
     3rdParty/asmjit/src/asmjit/core/builder.cpp
     3rdParty/asmjit/src/asmjit/core/builder.h
-    3rdParty/asmjit/src/asmjit/core/callconv.cpp
-    3rdParty/asmjit/src/asmjit/core/callconv.h
-    3rdParty/asmjit/src/asmjit/core/codebufferwriter_p.h
+    3rdParty/asmjit/src/asmjit/core/codebuffer.h
     3rdParty/asmjit/src/asmjit/core/codeholder.cpp
     3rdParty/asmjit/src/asmjit/core/codeholder.h
+    3rdParty/asmjit/src/asmjit/core/codewriter.cpp
+    3rdParty/asmjit/src/asmjit/core/codewriter_p.h
     3rdParty/asmjit/src/asmjit/core/compiler.cpp
+    3rdParty/asmjit/src/asmjit/core/compilerdefs.h
     3rdParty/asmjit/src/asmjit/core/compiler.h
     3rdParty/asmjit/src/asmjit/core/constpool.cpp
     3rdParty/asmjit/src/asmjit/core/constpool.h
     3rdParty/asmjit/src/asmjit/core/cpuinfo.cpp
     3rdParty/asmjit/src/asmjit/core/cpuinfo.h
+    3rdParty/asmjit/src/asmjit/core/emithelper.cpp
+    3rdParty/asmjit/src/asmjit/core/emithelper_p.h
     3rdParty/asmjit/src/asmjit/core/emitter.cpp
     3rdParty/asmjit/src/asmjit/core/emitter.h
-    3rdParty/asmjit/src/asmjit/core/features.h
+    3rdParty/asmjit/src/asmjit/core/emitterutils.cpp
+    3rdParty/asmjit/src/asmjit/core/emitterutils_p.h
+    3rdParty/asmjit/src/asmjit/core/environment.cpp
+    3rdParty/asmjit/src/asmjit/core/environment.h
+    3rdParty/asmjit/src/asmjit/core/errorhandler.cpp
+    3rdParty/asmjit/src/asmjit/core/errorhandler.h
+    3rdParty/asmjit/src/asmjit/core/formatter.cpp
+    3rdParty/asmjit/src/asmjit/core/formatter.h
+    3rdParty/asmjit/src/asmjit/core/formatter_p.h
+    3rdParty/asmjit/src/asmjit/core/funcargscontext.cpp
+    3rdParty/asmjit/src/asmjit/core/funcargscontext_p.h
     3rdParty/asmjit/src/asmjit/core/func.cpp
     3rdParty/asmjit/src/asmjit/core/func.h
     3rdParty/asmjit/src/asmjit/core/globals.cpp
@@ -93,13 +110,14 @@ add_library(CompiledNN
     3rdParty/asmjit/src/asmjit/core/jitallocator.h
     3rdParty/asmjit/src/asmjit/core/jitruntime.cpp
     3rdParty/asmjit/src/asmjit/core/jitruntime.h
-    3rdParty/asmjit/src/asmjit/core/logging.cpp
-    3rdParty/asmjit/src/asmjit/core/logging.h
+    3rdParty/asmjit/src/asmjit/core/logger.cpp
+    3rdParty/asmjit/src/asmjit/core/logger.h
     3rdParty/asmjit/src/asmjit/core/misc_p.h
     3rdParty/asmjit/src/asmjit/core/operand.cpp
     3rdParty/asmjit/src/asmjit/core/operand.h
     3rdParty/asmjit/src/asmjit/core/osutils.cpp
     3rdParty/asmjit/src/asmjit/core/osutils.h
+    3rdParty/asmjit/src/asmjit/core/osutils_p.h
     3rdParty/asmjit/src/asmjit/core/raassignment_p.h
     3rdParty/asmjit/src/asmjit/core/rabuilders_p.h
     3rdParty/asmjit/src/asmjit/core/radefs_p.h
@@ -127,31 +145,31 @@ add_library(CompiledNN
     3rdParty/asmjit/src/asmjit/core/zonelist.h
     3rdParty/asmjit/src/asmjit/core/zonestack.cpp
     3rdParty/asmjit/src/asmjit/core/zonestack.h
+    3rdParty/asmjit/src/asmjit/core/zonestring.h
     3rdParty/asmjit/src/asmjit/core/zonetree.cpp
     3rdParty/asmjit/src/asmjit/core/zonetree.h
     3rdParty/asmjit/src/asmjit/core/zonevector.cpp
     3rdParty/asmjit/src/asmjit/core/zonevector.h
+    3rdParty/asmjit/src/asmjit/x86/x86archtraits_p.h
     3rdParty/asmjit/src/asmjit/x86/x86assembler.cpp
     3rdParty/asmjit/src/asmjit/x86/x86assembler.h
     3rdParty/asmjit/src/asmjit/x86/x86builder.cpp
     3rdParty/asmjit/src/asmjit/x86/x86builder.h
-    3rdParty/asmjit/src/asmjit/x86/x86callconv.cpp
-    3rdParty/asmjit/src/asmjit/x86/x86callconv_p.h
     3rdParty/asmjit/src/asmjit/x86/x86compiler.cpp
     3rdParty/asmjit/src/asmjit/x86/x86compiler.h
+    3rdParty/asmjit/src/asmjit/x86/x86emithelper.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86emithelper_p.h
     3rdParty/asmjit/src/asmjit/x86/x86emitter.h
-    3rdParty/asmjit/src/asmjit/x86/x86features.cpp
-    3rdParty/asmjit/src/asmjit/x86/x86features.h
+    3rdParty/asmjit/src/asmjit/x86/x86formatter.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86formatter_p.h
+    3rdParty/asmjit/src/asmjit/x86/x86func.cpp
+    3rdParty/asmjit/src/asmjit/x86/x86func_p.h
     3rdParty/asmjit/src/asmjit/x86/x86globals.h
     3rdParty/asmjit/src/asmjit/x86/x86instapi.cpp
     3rdParty/asmjit/src/asmjit/x86/x86instapi_p.h
     3rdParty/asmjit/src/asmjit/x86/x86instdb.cpp
     3rdParty/asmjit/src/asmjit/x86/x86instdb.h
     3rdParty/asmjit/src/asmjit/x86/x86instdb_p.h
-    3rdParty/asmjit/src/asmjit/x86/x86internal.cpp
-    3rdParty/asmjit/src/asmjit/x86/x86internal_p.h
-    3rdParty/asmjit/src/asmjit/x86/x86logging.cpp
-    3rdParty/asmjit/src/asmjit/x86/x86logging_p.h
     3rdParty/asmjit/src/asmjit/x86/x86opcode_p.h
     3rdParty/asmjit/src/asmjit/x86/x86operand.cpp
     3rdParty/asmjit/src/asmjit/x86/x86operand.h
@@ -200,7 +218,7 @@ target_include_directories(CompiledNN SYSTEM PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src"
 )
 target_compile_definitions(CompiledNN PRIVATE
-    ASMJIT_STATIC ASMJIT_BUILD_X86 ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
+    ASMJIT_STATIC ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
     ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_VALIDATION ASMJIT_NO_INTROSPECTION
 )
 target_link_libraries(CompiledNN PUBLIC

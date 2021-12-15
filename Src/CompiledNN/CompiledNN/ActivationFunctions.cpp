@@ -1105,10 +1105,10 @@ namespace NeuralNetwork
       {
         if(fnData.fn.constants.data.size())
         {
-          a.align(AlignMode::kAlignZero, 16);
+          a.align(AlignMode::kZero, 16);
           a.bind(fnData.fn.constants.label);
           for(const float c : fnData.fn.constants.data)
-            a.dfloat(c);
+            a.embedFloat(c);
         }
       }
     }

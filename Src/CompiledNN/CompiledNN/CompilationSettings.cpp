@@ -11,15 +11,15 @@ void NeuralNetwork::CompilationSettings::constrict()
 {
   const CpuInfo& cpuInfo = CpuInfo::host();
 
-  if(useX64 && !ArchInfo(cpuInfo.archId(), cpuInfo.archSubId()).is64Bit())
+  if(useX64 && !Environment(cpuInfo.arch(), cpuInfo.subArch()).is64Bit())
     useX64 = false;
 
-  if(useSSE42 && !cpuInfo.features<x86::Features>().hasSSE4_2())
+  if(useSSE42 && !cpuInfo.features().x86().hasSSE4_2())
     useSSE42 = false;
 
-  if(useAVX2 && !cpuInfo.features<x86::Features>().hasAVX2())
+  if(useAVX2 && !cpuInfo.features().x86().hasAVX2())
     useAVX2 = false;
 
-  if(useFMA3 && !cpuInfo.features<x86::Features>().hasFMA())
+  if(useFMA3 && !cpuInfo.features().x86().hasFMA())
     useFMA3 = false;
 }

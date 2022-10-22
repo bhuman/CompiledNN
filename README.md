@@ -30,6 +30,15 @@ Another way to integrate CompiledNN is to add it (and its dependency [AsmJit](ht
 - Core
   - Dense
   - Activation
+    - relu
+    - tanh (approximated)
+    - sigmoid (approximated)
+    - hard_sigmoid
+    - linear
+    - softmax (approximated)
+    - elu (approximated)
+    - selu (approximated)
+    - softsign
   - Dropout
   - Flatten
   - Reshape (does not support dimension inference, i.e. specifying -1 as dimension is not allowed)
@@ -37,6 +46,7 @@ Another way to integrate CompiledNN is to add it (and its dependency [AsmJit](ht
   - Conv2D (only with `dilation_rate=1`)
   - SeparableConv2D (only with `dilation_rate=1` and `depth_multiplier=1`)
   - DepthwiseConv2D (only with `dilation_rate=1`, `depth_multiplier=1`, `use_bias=False` and `activation=None`)
+  - Cropping2D
   - UpSampling2D (only with `interpolation=nearest`, number of channels must be at most 32/64 and divisible by 4)
   - ZeroPadding2D (number of channels per row must be divisible by 4)
 - Pooling
@@ -51,15 +61,15 @@ Another way to integrate CompiledNN is to add it (and its dependency [AsmJit](ht
   - Average
   - Maximum
   - Minimum
-  - Concatenate
+  - Concatenate (number of channels after the concatenation axis must be divisible by 4 for each input)
 - Advanced Activations
   - LeakyReLU
   - ELU
   - ThresholdedReLU
-  - Softmax
+  - Softmax (only for flat tensors)
   - ReLU
 - Normalization
-  - BatchNormalization
+  - BatchNormalization (only for flat tensors or channel dimension)
 
 ## Example
 

@@ -15,6 +15,8 @@
 #include "../core/misc_p.h"
 #include "../core/support.h"
 #include "../x86/x86assembler.h"
+#include "../x86/x86emithelper_p.h"
+#include "../x86/x86instapi_p.h"
 #include "../x86/x86instdb_p.h"
 #include "../x86/x86formatter_p.h"
 #include "../x86/x86opcode_p.h"
@@ -525,6 +527,10 @@ static ASMJIT_FORCE_INLINE bool x86ShouldUseMovabs(Assembler* self, X86BufferWri
 // ===========================================
 
 Assembler::Assembler(CodeHolder* code) noexcept : BaseAssembler() {
+  _archMask = (uint64_t(1) << uint32_t(Arch::kX86)) |
+              (uint64_t(1) << uint32_t(Arch::kX64)) ;
+  assignEmitterFuncs(this);
+
   if (code)
     code->attach(this);
 }
@@ -604,7 +610,7 @@ ASMJIT_FAVOR_SPEED Error Assembler::_emit(InstId instId, const Operand_& o0, con
       Operand_ opArray[Globals::kMaxOpCount];
       EmitterUtils::opArrayFromEmitArgs(opArray, o0, o1, o2, opExt);
 
-      err = InstAPI::validate(arch(), BaseInst(instId, options, _extraReg), opArray, Globals::kMaxOpCount);
+      err = _funcs.validate(arch(), BaseInst(instId, options, _extraReg), opArray, Globals::kMaxOpCount, ValidationFlags::kNone);
       if (ASMJIT_UNLIKELY(err))
         goto Failed;
     }
@@ -2253,7 +2259,7 @@ CaseX86PushPop_Gp:
               goto EmitX86OpReg;
             }
             else {
-              // Encode 'xchg eax, eax' by by using a generic path.
+              // Encode 'xchg eax, eax' by using a generic path.
             }
           }
           else if (!Support::test(options, InstOptions::kLongForm)) {
@@ -2710,7 +2716,7 @@ CaseExtRm:
 
     case InstDB::kEncodingExtRm_P:
       if (isign3 == ENC_OPS2(Reg, Reg)) {
-        opcode.add66hIf(Reg::isXmm(o0) | Reg::isXmm(o1));
+        opcode.add66hIf(unsigned(Reg::isXmm(o0)) | unsigned(Reg::isXmm(o1)));
 
         opReg = o0.id();
         rbReg = o1.id();
@@ -2754,7 +2760,7 @@ CaseExtRm:
 
     case InstDB::kEncodingExtRmRi_P:
       if (isign3 == ENC_OPS2(Reg, Reg)) {
-        opcode.add66hIf(Reg::isXmm(o0) | Reg::isXmm(o1));
+        opcode.add66hIf(unsigned(Reg::isXmm(o0)) | unsigned(Reg::isXmm(o1)));
 
         opReg = o0.id();
         rbReg = o1.id();
@@ -2806,7 +2812,7 @@ CaseExtRm:
       immSize = 1;
 
       if (isign3 == ENC_OPS3(Reg, Reg, Imm)) {
-        opcode.add66hIf(Reg::isXmm(o0) | Reg::isXmm(o1));
+        opcode.add66hIf(unsigned(Reg::isXmm(o0)) | unsigned(Reg::isXmm(o1)));
 
         opReg = o0.id();
         rbReg = o1.id();
@@ -3034,7 +3040,7 @@ CaseVexMri:
       goto CaseVexRm;
 
     case InstDB::kEncodingVexRm_Wx:
-      opcode.addWIf(Reg::isGpq(o0) | Reg::isGpq(o1));
+      opcode.addWIf(unsigned(Reg::isGpq(o0)) | unsigned(Reg::isGpq(o1)));
       goto CaseVexRm;
 
     case InstDB::kEncodingVexRm_Lx_Narrow:
@@ -3104,7 +3110,7 @@ CaseVexRm:
     }
 
     case InstDB::kEncodingVexRmi_Wx:
-      opcode.addWIf(Reg::isGpq(o0) | Reg::isGpq(o1));
+      opcode.addWIf(unsigned(Reg::isGpq(o0)) | unsigned(Reg::isGpq(o1)));
       goto CaseVexRmi;
 
     case InstDB::kEncodingVexRmi_Lx:
@@ -3153,7 +3159,7 @@ CaseVexRvm_R:
     }
 
     case InstDB::kEncodingVexRvm_Wx: {
-      opcode.addWIf(Reg::isGpq(o0) | (o2.size() == 8));
+      opcode.addWIf(unsigned(Reg::isGpq(o0)) | unsigned((o2.size() == 8)));
       goto CaseVexRvm;
     }
 
@@ -3255,7 +3261,7 @@ VexRvmi:
     }
 
     case InstDB::kEncodingVexRmv_Wx:
-      opcode.addWIf(Reg::isGpq(o0) | Reg::isGpq(o2));
+      opcode.addWIf(unsigned(Reg::isGpq(o0)) | unsigned(Reg::isGpq(o2)));
       ASMJIT_FALLTHROUGH;
 
     case InstDB::kEncodingVexRmv:
@@ -3608,7 +3614,7 @@ VexRvmi:
       break;
 
     case InstDB::kEncodingVexVm_Wx:
-      opcode.addWIf(Reg::isGpq(o0) | Reg::isGpq(o1));
+      opcode.addWIf(unsigned(Reg::isGpq(o0)) | unsigned(Reg::isGpq(o1)));
       ASMJIT_FALLTHROUGH;
 
     case InstDB::kEncodingVexVm:
@@ -4159,7 +4165,7 @@ EmitModSib:
 
             re->_sourceSectionId = _section->id();
             re->_sourceOffset = offset();
-            re->_format.resetToDataValue(4);
+            re->_format.resetToSimpleValue(OffsetType::kSignedOffset, 4);
             re->_format.setLeadingAndTrailingSize(writer.offsetFrom(_bufferPtr), immSize);
             re->_payload = uint64_t(rmRel->as<Mem>().offset());
 
@@ -4256,7 +4262,7 @@ EmitModSib_LabelRip_X86:
 
           re->_sourceSectionId = _section->id();
           re->_sourceOffset = offset();
-          re->_format.resetToDataValue(4);
+          re->_format.resetToSimpleValue(OffsetType::kUnsignedOffset, 4);
           re->_format.setLeadingAndTrailingSize(writer.offsetFrom(_bufferPtr), immSize);
           re->_payload = uint64_t(int64_t(relOffset));
 
@@ -4281,7 +4287,7 @@ EmitModSib_LabelRip_X86:
 
           re->_sourceSectionId = _section->id();
           re->_targetSectionId = _section->id();
-          re->_format.resetToDataValue(4);
+          re->_format.resetToSimpleValue(OffsetType::kUnsignedOffset, 4);
           re->_format.setLeadingAndTrailingSize(writer.offsetFrom(_bufferPtr), immSize);
           re->_sourceOffset = offset();
           re->_payload = re->_sourceOffset + re->_format.regionSize() + uint64_t(int64_t(relOffset));
@@ -4871,13 +4877,13 @@ EmitJmpCall:
         writer.emit8If(0x0F, (opcode & Opcode::kMM_Mask) != 0);  // Emit 0F prefix.
         writer.emit8(opcode.v);                                  // Emit opcode.
         writer.emit8If(x86EncodeMod(3, opReg, 0), opReg != 0);   // Emit MOD.
-        re->_format.resetToDataValue(4);
+        re->_format.resetToSimpleValue(OffsetType::kSignedOffset, 4);
         re->_format.setLeadingAndTrailingSize(writer.offsetFrom(_bufferPtr), immSize);
         writer.emit32uLE(0);                                     // Emit DISP32.
       }
       else {
         writer.emit8(opCode8);                                   // Emit opcode.
-        re->_format.resetToDataValue(4);
+        re->_format.resetToSimpleValue(OffsetType::kSignedOffset, 1);
         re->_format.setLeadingAndTrailingSize(writer.offsetFrom(_bufferPtr), immSize);
         writer.emit8(0);                                         // Emit DISP8 (zero).
       }
@@ -4919,7 +4925,7 @@ EmitRel:
     // Chain with label.
     size_t offset = size_t(writer.offsetFrom(_bufferData));
     OffsetFormat of;
-    of.resetToDataValue(relSize);
+    of.resetToSimpleValue(OffsetType::kSignedOffset, relSize);
 
     LabelLink* link = _code->newLabelLink(label, _section->id(), offset, relOffset, of);
     if (ASMJIT_UNLIKELY(!link))
@@ -5077,9 +5083,6 @@ Error Assembler::align(AlignMode alignMode, uint32_t alignment) {
 
 Error Assembler::onAttach(CodeHolder* code) noexcept {
   Arch arch = code->arch();
-  if (!Environment::isFamilyX86(arch))
-    return DebugUtils::errored(kErrorInvalidArch);
-
   ASMJIT_PROPAGATE(Base::onAttach(code));
 
   if (Environment::is32Bit(arch)) {
@@ -5099,7 +5102,6 @@ Error Assembler::onAttach(CodeHolder* code) noexcept {
 Error Assembler::onDetach(CodeHolder* code) noexcept {
   _forcedInstOptions &= ~InstOptions::kX86_InvalidRex;
   _setAddressOverrideMask(0);
-
   return Base::onDetach(code);
 }
 

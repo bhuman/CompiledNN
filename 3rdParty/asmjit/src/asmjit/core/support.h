@@ -203,7 +203,7 @@ static constexpr bool bitTest(T x, IndexT n) noexcept {
 // Tests whether the given `value` is a consecutive mask of bits that starts at
 // the least significant bit.
 template<typename T>
-static constexpr inline bool isLsbMask(const T& value) {
+static inline constexpr bool isLsbMask(const T& value) {
   typedef typename std::make_unsigned<T>::type U;
   return value && ((U(value) + 1u) & U(value)) == 0;
 }
@@ -214,7 +214,7 @@ static constexpr inline bool isLsbMask(const T& value) {
 // This function is similar to \ref isLsbMask(), but the mask doesn't have to
 // start at a least significant bit.
 template<typename T>
-static constexpr inline bool isConsecutiveMask(const T& value) {
+static inline constexpr bool isConsecutiveMask(const T& value) {
   typedef typename std::make_unsigned<T>::type U;
   return value && isLsbMask((U(value) - 1u) | U(value));
 }
@@ -1227,34 +1227,11 @@ public:
   ASMJIT_FORCE_INLINE uint32_t next() noexcept {
     ASMJIT_ASSERT(_bitWord != 0);
     uint32_t index = ctz(_bitWord);
-    _bitWord ^= T(1u) << index;
+    _bitWord &= T(_bitWord - 1);
     return index;
   }
 
   T _bitWord;
-};
-
-// Support - BitWordFlipIterator
-// =============================
-
-template<typename T>
-class BitWordFlipIterator {
-public:
-  ASMJIT_FORCE_INLINE explicit BitWordFlipIterator(T bitWord) noexcept
-    : _bitWord(bitWord) {}
-
-  ASMJIT_FORCE_INLINE void init(T bitWord) noexcept { _bitWord = bitWord; }
-  ASMJIT_FORCE_INLINE bool hasNext() const noexcept { return _bitWord != 0; }
-
-  ASMJIT_FORCE_INLINE uint32_t nextAndFlip() noexcept {
-    ASMJIT_ASSERT(_bitWord != 0);
-    uint32_t index = ctz(_bitWord);
-    _bitWord ^= T(1u) << index;
-    return index;
-  }
-
-  T _bitWord;
-  T _xorMask;
 };
 
 // Support - BitVectorOps
@@ -1406,7 +1383,7 @@ public:
     ASMJIT_ASSERT(bitWord != T(0));
 
     uint32_t bit = ctz(bitWord);
-    bitWord ^= T(1u) << bit;
+    bitWord &= T(bitWord - 1u);
 
     size_t n = _idx + bit;
     while (!bitWord && (_idx += bitSizeOf<T>()) < _end)
@@ -1471,7 +1448,7 @@ public:
     ASMJIT_ASSERT(bitWord != T(0));
 
     uint32_t bit = ctz(bitWord);
-    bitWord ^= T(1u) << bit;
+    bitWord &= T(bitWord - 1u);
 
     size_t n = _idx + bit;
     while (!bitWord && (_idx += kTSizeInBits) < _end)

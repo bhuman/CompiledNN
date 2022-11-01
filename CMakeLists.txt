@@ -66,6 +66,7 @@ add_library(CompiledNN
     3rdParty/asmjit/src/asmjit/asmjit-scope-end.h
     3rdParty/asmjit/src/asmjit/core.h
     3rdParty/asmjit/src/asmjit/x86.h
+    3rdParty/asmjit/src/asmjit/arm/a64archtraits_p.h
     3rdParty/asmjit/src/asmjit/arm/a64assembler.cpp
     3rdParty/asmjit/src/asmjit/arm/a64assembler.h
     3rdParty/asmjit/src/asmjit/arm/a64builder.cpp
@@ -75,6 +76,10 @@ add_library(CompiledNN
     3rdParty/asmjit/src/asmjit/arm/a64emithelper.cpp
     3rdParty/asmjit/src/asmjit/arm/a64emithelper_p.h
     3rdParty/asmjit/src/asmjit/arm/a64emitter.h
+    3rdParty/asmjit/src/asmjit/arm/a64formatter.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64formatter_p.h
+    3rdParty/asmjit/src/asmjit/arm/a64func.cpp
+    3rdParty/asmjit/src/asmjit/arm/a64func_p.h
     3rdParty/asmjit/src/asmjit/arm/a64globals.h
     3rdParty/asmjit/src/asmjit/arm/a64instapi.cpp
     3rdParty/asmjit/src/asmjit/arm/a64instapi_p.h
@@ -86,11 +91,8 @@ add_library(CompiledNN
     3rdParty/asmjit/src/asmjit/arm/a64rapass.cpp
     3rdParty/asmjit/src/asmjit/arm/a64rapass_p.h
     3rdParty/asmjit/src/asmjit/arm/a64utils.h
-    3rdParty/asmjit/src/asmjit/arm/armarchtraits_p.h
     3rdParty/asmjit/src/asmjit/arm/armformatter.cpp
     3rdParty/asmjit/src/asmjit/arm/armformatter_p.h
-    3rdParty/asmjit/src/asmjit/arm/armfunc.cpp
-    3rdParty/asmjit/src/asmjit/arm/armfunc_p.h
     3rdParty/asmjit/src/asmjit/arm/armglobals.h
     3rdParty/asmjit/src/asmjit/arm/armoperand.h
     3rdParty/asmjit/src/asmjit/core/api-build_p.h
@@ -247,8 +249,8 @@ target_include_directories(CompiledNN SYSTEM PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/asmjit/src"
 )
 target_compile_definitions(CompiledNN PRIVATE
-    ASMJIT_STATIC ASMJIT_NO_ARM ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER ASMJIT_NO_DEPRECATED
-    ASMJIT_NO_INTROSPECTION ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_VALIDATION
+    ASMJIT_STATIC ASMJIT_NO_AARCH32 ASMJIT_NO_AARCH64 ASMJIT_NO_BUILDER ASMJIT_NO_COMPILER
+    ASMJIT_NO_DEPRECATED ASMJIT_NO_INTROSPECTION ASMJIT_NO_LOGGING ASMJIT_NO_TEXT ASMJIT_NO_VALIDATION
 )
 target_link_libraries(CompiledNN PUBLIC
     $<$<PLATFORM_ID:Linux>:pthread> $<$<PLATFORM_ID:Linux>:rt>

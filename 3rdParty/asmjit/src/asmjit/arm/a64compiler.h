@@ -169,6 +169,18 @@ public:
 
   //! \}
 
+  //! \name Compiler specific
+  //! \{
+
+  //! Special pseudo-instruction that can be used to load a memory address into `o0` GP register.
+  //!
+  //! \note At the moment this instruction is only useful to load a stack allocated address into a GP register
+  //! for further use. It makes very little sense to use it for anything else. The semantics of this instruction
+  //! is the same as X86 `LEA` (load effective address) instruction.
+  inline Error loadAddressOf(const Gp& o0, const Mem& o1) { return _emitter()->_emitI(Inst::kIdAdr, o0, o1); }
+
+  //! \}
+
   //! \name Function Call & Ret Intrinsics
   //! \{
 
@@ -211,17 +223,18 @@ public:
 
   //! \}
 
-  //! \name Finalize
-  //! \{
-
-  ASMJIT_API Error finalize() override;
-
-  //! \}
-
   //! \name Events
   //! \{
 
   ASMJIT_API Error onAttach(CodeHolder* code) noexcept override;
+  ASMJIT_API Error onDetach(CodeHolder* code) noexcept override;
+
+  //! \}
+
+  //! \name Finalize
+  //! \{
+
+  ASMJIT_API Error finalize() override;
 
   //! \}
 };

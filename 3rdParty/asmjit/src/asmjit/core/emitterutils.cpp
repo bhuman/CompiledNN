@@ -86,7 +86,7 @@ void logInstructionEmitted(
   opArrayFromEmitArgs(opArray, o0, o1, o2, opExt);
 
   sb.appendChars(' ', logger->indentation(FormatIndentationGroup::kCode));
-  Formatter::formatInstruction(sb, formatFlags, self, self->arch(), BaseInst(instId, options, self->extraReg()), opArray, Globals::kMaxOpCount);
+  self->_funcs.formatInstruction(sb, formatFlags, self, self->arch(), BaseInst(instId, options, self->extraReg()), opArray, Globals::kMaxOpCount);
 
   if (Support::test(formatFlags, FormatFlags::kMachineCode))
     finishFormattedLine(sb, logger->options(), self->bufferPtr(), size_t(emittedSize), relSize, immSize, self->inlineComment());
@@ -96,7 +96,7 @@ void logInstructionEmitted(
 }
 
 Error logInstructionFailed(
-  BaseAssembler* self,
+  BaseEmitter* self,
   Error err,
   InstId instId,
   InstOptions options,
@@ -109,7 +109,7 @@ Error logInstructionFailed(
   Operand_ opArray[Globals::kMaxOpCount];
   opArrayFromEmitArgs(opArray, o0, o1, o2, opExt);
 
-  Formatter::formatInstruction(sb, FormatFlags::kNone, self, self->arch(), BaseInst(instId, options, self->extraReg()), opArray, Globals::kMaxOpCount);
+  self->_funcs.formatInstruction(sb, FormatFlags::kRegType, self, self->arch(), BaseInst(instId, options, self->extraReg()), opArray, Globals::kMaxOpCount);
 
   if (self->inlineComment()) {
     sb.append(" ; ");

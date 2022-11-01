@@ -36,7 +36,9 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! // Small helper function to print the current content of `cb`.
 //! static void dumpCode(BaseBuilder& builder, const char* phase) {
 //!   String sb;
-//!   builder.dump(sb);
+//!   formatOptions formatOptions {};
+//!
+//!   Formatter::formatNodeList(sb, formatOptions, &builder);
 //!   printf("%s:\n%s\n", phase, sb.data());
 //! }
 //!
@@ -327,17 +329,18 @@ public:
 
   //! \}
 
-  //! \name Finalize
-  //! \{
-
-  ASMJIT_API Error finalize() override;
-
-  //! \}
-
   //! \name Events
   //! \{
 
   ASMJIT_API Error onAttach(CodeHolder* code) noexcept override;
+  ASMJIT_API Error onDetach(CodeHolder* code) noexcept override;
+
+  //! \}
+
+  //! \name Finalize
+  //! \{
+
+  ASMJIT_API Error finalize() override;
 
   //! \}
 };

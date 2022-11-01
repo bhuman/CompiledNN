@@ -31,7 +31,7 @@
 #endif
 
 // B-Human modification:
-#ifndef ASMJIT_NO_ARM
+#ifndef ASMJIT_NO_AARCH64
   #include "./a64.h"
 #endif
 

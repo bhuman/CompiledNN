@@ -15,12 +15,10 @@ namespace NeuralNetwork
       struct Parameters final
       {
         std::array<unsigned int, 2> size;
-        InterpolationMethod method;
 
         bool operator==(const Parameters& other) const
         {
-          return size == other.size &&
-                 method == other.method;
+          return size == other.size;
         }
       };
       const Parameters p;

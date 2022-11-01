@@ -1078,30 +1078,70 @@ namespace NeuralNetwork
       std::string mangledLayerName = layerName;
       hid_t weightNamesAttribute = H5Aopen(layerGroup, "weight_names", H5P_DEFAULT);
       ASSERT(weightNamesAttribute >= 0);
+
       hid_t weightNamesAttributeType = H5Aget_type(weightNamesAttribute);
       ASSERT(weightNamesAttributeType >= 0);
-      hsize_t weightNamesAttributeSize = H5Aget_storage_size(weightNamesAttribute);
-      ASSERT(weightNamesAttributeSize > 0);
-      std::vector<char> weightNamesBuf(static_cast<size_t>(weightNamesAttributeSize));
-      VERIFY(H5Aread(weightNamesAttribute, weightNamesAttributeType, weightNamesBuf.data()) >= 0);
-      size_t weightNameLength = H5Tget_size(weightNamesAttributeType);
-      ASSERT(weightNameLength > 0);
-      VERIFY(H5Tclose(weightNamesAttributeType) >= 0);
-      VERIFY(H5Aclose(weightNamesAttribute) >= 0);
-      for(size_t i = 0; i < static_cast<size_t>(weightNamesAttributeSize); i += weightNameLength)
+      ASSERT(H5Tget_class(weightNamesAttributeType) == H5T_STRING);
+      ASSERT(H5Tget_cset(weightNamesAttributeType) == H5T_CSET_ASCII);
+
+      hid_t weightNamesAttributeDataspace = H5Aget_space(weightNamesAttribute);
+      ASSERT(weightNamesAttributeDataspace >= 0);
+      ASSERT(H5Sis_simple(weightNamesAttributeDataspace) > 0);
+      ASSERT(H5Sget_simple_extent_type(weightNamesAttributeDataspace) == H5S_SIMPLE);
+      ASSERT(H5Sget_simple_extent_ndims(weightNamesAttributeDataspace) == 1);
+      hsize_t numOfWeightNames = 0;
+      VERIFY(H5Sget_simple_extent_dims(weightNamesAttributeDataspace, &numOfWeightNames, nullptr) == 1);
+
+      if(H5Tis_variable_str(weightNamesAttributeType) > 0)
       {
-        // This string might end with multiple \0 due to the zero-padding in HDF5, but it does not matter since
-        // everything coming after the colon is irrelevant
-        const std::string currentWeightLayerName(weightNamesBuf.begin() + i, weightNamesBuf.begin() + i + weightNameLength);
-        auto posSlash = currentWeightLayerName.find('/');
-        auto posColon = currentWeightLayerName.find(':');
-        std::string currentWeightName = currentWeightLayerName.substr(posSlash + 1, posColon - posSlash - 1);
-        if(currentWeightName == weightName)
+        ASSERT(H5Tget_size(weightNamesAttributeType) == sizeof(char*));
+        // I have no idea where the factor 2 comes from, but valgrind doesn't report any invalid reads/writes
+        // although the actual allocated storage (weightNamesData) isn't twice as large.
+        ASSERT(H5Aget_storage_size(weightNamesAttribute) == numOfWeightNames * sizeof(char*) * 2);
+
+        std::vector<const char*> weightNamesData(static_cast<size_t>(numOfWeightNames));
+        VERIFY(H5Aread(weightNamesAttribute, weightNamesAttributeType, weightNamesData.data()) >= 0);
+        for(const char* ptr : weightNamesData)
         {
-          mangledLayerName = currentWeightLayerName.substr(0, posSlash);
-          break;
+          const std::string currentWeightLayerName(ptr);
+          auto posSlash = currentWeightLayerName.find('/');
+          auto posColon = currentWeightLayerName.find(':');
+          std::string currentWeightName = currentWeightLayerName.substr(posSlash + 1, posColon - posSlash - 1);
+          if(currentWeightName == weightName)
+          {
+            mangledLayerName = currentWeightLayerName.substr(0, posSlash);
+            break;
+          }
+        }
+        H5Dvlen_reclaim(weightNamesAttributeType, weightNamesAttributeDataspace, H5P_DEFAULT, weightNamesData.data());
+      }
+      else
+      {
+        hsize_t weightNamesAttributeSize = H5Aget_storage_size(weightNamesAttribute);
+        ASSERT(weightNamesAttributeSize > 0);
+
+        const size_t weightNameLength = H5Tget_size(weightNamesAttributeType);
+        ASSERT(weightNameLength > 0);
+        ASSERT(weightNamesAttributeSize % weightNameLength == 0);
+
+        std::vector<char> weightNamesData(static_cast<size_t>(weightNamesAttributeSize));
+        VERIFY(H5Aread(weightNamesAttribute, weightNamesAttributeType, weightNamesData.data()) >= 0);
+        for(auto it = weightNamesData.begin(); it != weightNamesData.end(); it += weightNameLength)
+        {
+          const std::string currentWeightLayerName(it, it + weightNameLength);
+          auto posSlash = currentWeightLayerName.find('/');
+          auto posColon = currentWeightLayerName.find(':');
+          std::string currentWeightName = currentWeightLayerName.substr(posSlash + 1, posColon - posSlash - 1);
+          if(currentWeightName == weightName)
+          {
+            mangledLayerName = currentWeightLayerName.substr(0, posSlash);
+            break;
+          }
         }
       }
+      VERIFY(H5Sclose(weightNamesAttributeDataspace) >= 0);
+      VERIFY(H5Tclose(weightNamesAttributeType) >= 0);
+      VERIFY(H5Aclose(weightNamesAttribute) >= 0);
 
       hid_t weightsGroup = H5Gopen2(layerGroup, mangledLayerName.c_str(), H5P_DEFAULT);
       ASSERT(weightsGroup >= 0);

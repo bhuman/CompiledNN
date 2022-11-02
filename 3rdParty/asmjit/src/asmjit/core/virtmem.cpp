@@ -407,7 +407,8 @@ static int mmProtFromMemoryFlags(MemoryFlags memoryFlags) noexcept {
   return protection;
 }
 
-#if defined(__APPLE__) && TARGET_OS_OSX
+// B-Human modification: The && !(ASMJIT_ARCH_ARM >= 64) condition is not present in the original version.
+#if defined(__APPLE__) && TARGET_OS_OSX && !(ASMJIT_ARCH_ARM >= 64)
 static int getOSXVersion() noexcept {
   // MAP_JIT flag required to run unsigned JIT code is only supported by kernel version 10.14+ (Mojave).
   static std::atomic<uint32_t> globalVersion;
@@ -422,7 +423,7 @@ static int getOSXVersion() noexcept {
 
   return ver;
 }
-#endif // __APPLE__ && TARGET_OS_OSX
+#endif // __APPLE__ && TARGET_OS_OSX && !(ASMJIT_ARCH_ARM >= 64)
 
 // Detects whether the current process is hardened, which means that pages that have WRITE and EXECUTABLE flags
 // cannot be normally allocated. On OSX + AArch64 such allocation requires MAP_JIT flag, other platforms don't

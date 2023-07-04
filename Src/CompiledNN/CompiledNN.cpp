@@ -777,7 +777,10 @@ namespace NeuralNetwork
         if(bnCompiler && node->inputs.size() == 1 && locationRefCounters[node->inputs[0]] == 1 && nodeInputs[0].provider)
         {
           const UInt8InputCompiler* uInt8InputCompiler = dynamic_cast<const UInt8InputCompiler*>(nodeInputs[0].provider->compiler);
-          if(uInt8InputCompiler && !uInt8InputCompiler->p.batchNormalization && bnCompiler->p.dimension == 2)
+          // number of image channels (inputDimensions[0][2]) needs to be 1, 2 or 4.
+          // For the other cases combining int-to-float-conversion and BatchNormalization into one layer is not implemented.
+          if(uInt8InputCompiler && !uInt8InputCompiler->p.batchNormalization && bnCompiler->p.dimension == 2
+              && (node->inputDimensions[0][2] == 1 || node->inputDimensions[0][2] == 2 || node->inputDimensions[0][2] == 4))
           {
             --bnCompiler->refCount;
             --uInt8InputCompiler->refCount;
@@ -952,3 +955,4 @@ namespace NeuralNetwork
     compilerBackend(operations, compilers, inputLocations, outputLocations, settings);
   }
 }
+

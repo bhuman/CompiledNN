@@ -5,6 +5,7 @@
 #pragma once
 
 #include "../CompiledNNImplBase.h"
+#include "BatchNormalization.h"
 
 namespace NeuralNetwork
 {
@@ -14,13 +15,19 @@ namespace NeuralNetwork
     {
       struct Parameters final
       {
+        const BatchNormalizationCompiler::Parameters* batchNormalization = nullptr;
         const Tensor<float, 1>* weights;
+        const std::vector<float>* biases;
+        ActivationFunctionDescriptor postActivation;
         std::array<unsigned int, 2> strides;
 
         bool operator==(const Parameters& other) const
         {
-          return weights == other.weights &&
-                 strides == other.strides;
+          return batchNormalization == other.batchNormalization &&
+            weights == other.weights &&
+            biases == other.biases &&
+            strides == other.strides &&
+            postActivation == other.postActivation;
         }
       };
       const Parameters p;
@@ -42,11 +49,12 @@ namespace NeuralNetwork
       }
 
     private:
+      mutable unsigned int biasOffset = 0;
       unsigned int outputBatchSize = 0;
 
       void compileFilter(x86::Assembler& a, const bool inputAligned, const unsigned int remainingOutputs, const unsigned int remainingInput, const bool lastFilter = false) const;
-      void compileOutputBatch(x86::Assembler& a, const unsigned int inputWidth, const unsigned int remainingOutputs) const;
-      void compileSimpleConvolution(x86::Assembler& a, const unsigned int inputWidth, const unsigned int outputHeight, const unsigned int outputWidth) const;
+      void compileOutputBatch(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int remainingOutputs) const;
+      void compileSimpleConvolution(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int outputHeight, const unsigned int outputWidth) const;
     };
   }
 }

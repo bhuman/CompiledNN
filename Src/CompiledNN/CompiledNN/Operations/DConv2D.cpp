@@ -14,7 +14,8 @@ namespace NeuralNetwork
       outputBatchSize = 4 * (settings.xmmRegs() - 2);
 
       // Declare constants
-      constants.resize(1);
+      constants.resize(p.biases || p.batchNormalization ? 2 : 1);
+
       // Store weights
       NetworkConstants& weights = constants[0];
       weights.data.clear();
@@ -37,13 +38,38 @@ namespace NeuralNetwork
               {
                 int row = y * p.weights->dims(1) * outputChannels;
                 int col = input * outputChannels;
-                weights.data.emplace_back((*p.weights)[row + col + output + i]);
+                const float w = (*p.weights)[row + col + output + i];
+                if(p.batchNormalization)
+                  weights.data.emplace_back(w * (*p.batchNormalization->factor)[output + i]);
+                else
+                  weights.data.emplace_back(w);
               }
               for(unsigned int i = remainingOutputs; i < 4; i++)
                 weights.data.emplace_back(0.f);
             }
           }
         }
+      }
+
+      // Store biases
+      if(p.biases)
+      {
+        if(p.batchNormalization)
+        {
+          constants[1].data.resize(p.biases->size());
+          for(size_t i = 0; i < p.biases->size(); i++)
+          {
+            constants[1].data[i] = (*p.biases)[i] * (*p.batchNormalization->factor)[i] + (*p.batchNormalization->offset)[i];
+          }
+        }
+        else
+        {
+          constants[1].data = *p.biases;
+        }
+      }
+      else if(p.batchNormalization)
+      {
+        constants[1].data = *p.batchNormalization->offset;
       }
     }
 
@@ -101,11 +127,30 @@ namespace NeuralNetwork
       a.add(a.zbx(), imm(filterOffset));
     }
 
-    void DConv2DCompiler::compileOutputBatch(x86::Assembler& a, const unsigned int inputWidth, const unsigned int remainingOutputs) const
+    void DConv2DCompiler::compileOutputBatch(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int remainingOutputs) const
     {
+      const NetworkConstants& biases = constants[1];
       const bool inputAligned = (p.strides[1] * p.weights->dims(2)) % 4 == 0;
       const bool outputAligned = p.weights->dims(2) % 4 == 0;
       const unsigned int stepSize = (remainingOutputs + 3) / 4;
+
+      // Initialize activation function
+      ActivationFn& activationFn = afHandler.prepare(p.postActivation, remainingOutputs == 1, a, {}, {});
+      bool activationFnInitialized = false;
+      for(unsigned int step = 0; step < stepSize; step++)
+      {
+        activationFn.addValue(x86::xmm(step));
+      }
+      if(ActivationFunctionHandler::neededSpares(p.postActivation) <= settings.xmmRegs() - 2 - stepSize)
+      {
+        for(unsigned int i = stepSize; i < settings.xmmRegs() - 2; i++)
+          activationFn.addSpare(x86::xmm(i));
+        activationFn.initialize(a);
+        activationFnInitialized = true;
+      }
+      else
+        for(unsigned int i = stepSize; i < settings.xmmRegs(); i++)
+          activationFn.addSpare(x86::xmm(i));
 
       // Load input base address in zdx
       a.mov(a.zdx(), a.zsi());
@@ -136,6 +181,21 @@ namespace NeuralNetwork
       a.dec(a.zax());
       a.jnz(filterRowLoop);
 
+      // Add bias
+      for(unsigned int step = 0; step < stepSize; step++)
+      {
+        if(step == stepSize - 1 && remainingOutputs % 4 == 1)
+          a.addss(x86::xmm(step), x86::ptr(biases.label, biasOffset + step * 4 * sizeof(float)));
+        else
+          a.addps(x86::xmm(step), x86::ptr(biases.label, biasOffset + step * 4 * sizeof(float)));
+      }
+      biasOffset += stepSize * 4 * sizeof(float);
+
+      // Apply activation function
+      if(!activationFnInitialized)
+        activationFn.initialize(a);
+      activationFn.apply(a);
+
       // Store output
       for(unsigned int step = 0; step < stepSize; step++)
       {
@@ -149,7 +209,7 @@ namespace NeuralNetwork
       a.add(a.zdi(), imm(remainingOutputs * sizeof(float)));
     }
 
-    void DConv2DCompiler::compileSimpleConvolution(x86::Assembler& a, const unsigned int inputWidth, const unsigned int outputHeight, const unsigned int outputWidth) const
+    void DConv2DCompiler::compileSimpleConvolution(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int outputHeight, const unsigned int outputWidth) const
     {
       const unsigned int inputSize = p.weights->dims(1) * p.weights->dims(2);
 
@@ -168,8 +228,28 @@ namespace NeuralNetwork
           regOffset = 1;
       }
 
+      // Prepare activation function
+      const unsigned int activationRegsNeeded = ActivationFunctionHandler::neededSpares(p.postActivation);
+      ActivationFn* activationFn = &(afHandler.prepare(p.postActivation, p.weights->dims(3) == 1, a, {}, { x86::xmm0 }));
+      if(regsNeeded + activationRegsNeeded < settings.xmmRegs())
+      {
+        for(unsigned int i = regsNeeded; i < regsNeeded + activationRegsNeeded; i++)
+          activationFn->addSpare(x86::xmm(i));
+        activationFn->initialize(a);
+      }
+
+      // Load bias
+      const unsigned int biasRegister = regsNeeded + activationRegsNeeded < settings.xmmRegs() ? regsNeeded + activationRegsNeeded : regsNeeded;
+      if(biasRegister < settings.xmmRegs())
+      {
+        if(p.weights->dims(2) == 1)
+          a.movss(x86::xmm(biasRegister), x86::ptr(constants[1].label));
+        else
+          a.movaps(x86::xmm(biasRegister), x86::ptr(constants[1].label));
+      }
+
       // If some registers are free, load some weights
-      const unsigned int weightRegisterOffset = regsNeeded + 1; // TODO check this
+      const unsigned int weightRegisterOffset = biasRegister + 1; // TODO check this
       const unsigned int weightRegisterCount = std::min(p.weights->dims(0) * inputSize, static_cast<unsigned int>(std::max(0, static_cast<int>(settings.xmmRegs()) - static_cast<int>(weightRegisterOffset))));
       const unsigned int weightRegisterMemoryOffset = (p.weights->dims(0) * inputSize - weightRegisterCount) * 4 * sizeof(float);
       for(unsigned int i = 0; i < weightRegisterCount; i++)
@@ -249,6 +329,31 @@ namespace NeuralNetwork
           regOffset = 1;
       }
 
+      // Add bias
+      if(biasRegister < settings.xmmRegs())
+      {
+        if(p.weights->dims(2) == 1)
+          a.addss(x86::xmm0, x86::xmm(biasRegister));
+        else
+          a.addps(x86::xmm0, x86::xmm(biasRegister));
+      }
+      else
+      {
+        if(p.weights->dims(2) == 1)
+          a.addss(x86::xmm0, x86::ptr(constants[1].label));
+        else
+          a.addps(x86::xmm0, x86::ptr(constants[1].label));
+      }
+
+      // Apply activation function
+      if(regsNeeded + activationRegsNeeded >= settings.xmmRegs())
+      {
+        for(unsigned int i = 1; i < settings.xmmRegs(); i++)
+          activationFn->addSpare(x86::xmm(i));
+        activationFn->initialize(a);
+      }
+      activationFn->apply(a);
+
       // Store result
       if(p.weights->dims(2) == 1)
         a.movss(a.ptr_zdi(), x86::xmm0);
@@ -275,7 +380,7 @@ namespace NeuralNetwork
       }
     }
 
-    void DConv2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void DConv2DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler& afHandler, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 3);
       ASSERT(output.rank() == 3);
@@ -293,7 +398,7 @@ namespace NeuralNetwork
         a.mov(a.zdi(), imm(output.data()));
 
       if(p.weights->dims(2) <= 4 && p.weights->dims(1) * p.weights->dims(2) <= 4)
-        compileSimpleConvolution(a, inputWidth, output.dims(0), output.dims(1));
+        compileSimpleConvolution(a, afHandler, inputWidth, output.dims(0), output.dims(1));
       else
       {
         // Begin loop over output image rows
@@ -317,6 +422,8 @@ namespace NeuralNetwork
         // Load filter base address
         a.lea(a.zbx(), x86::ptr(weights.label));
 
+        biasOffset = 0;
+
         if(p.weights->dims(2) > outputBatchSize)
         {
           // Begin loop over output batches (only construct loop if it has more than one iteration)
@@ -336,7 +443,7 @@ namespace NeuralNetwork
             a.bind(outputBatchLoop);
           }
 
-          compileOutputBatch(a, inputWidth, outputBatchSize);
+          compileOutputBatch(a, afHandler, inputWidth, outputBatchSize);
 
           // End loop over output batches
           if(p.weights->dims(2) / outputBatchSize >= 2)
@@ -356,7 +463,7 @@ namespace NeuralNetwork
 
         const unsigned int remainingOutputs = p.weights->dims(2) == outputBatchSize ? outputBatchSize : p.weights->dims(2) % outputBatchSize;
         if(remainingOutputs)
-          compileOutputBatch(a, inputWidth, remainingOutputs);
+          compileOutputBatch(a, afHandler, inputWidth, remainingOutputs);
 
         // Set input offset to next column, respecting the stride
         a.add(a.zsi(), imm(p.strides[1] * p.weights->dims(2) * sizeof(float)));

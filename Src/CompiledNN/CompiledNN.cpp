@@ -204,12 +204,13 @@ namespace NeuralNetwork
         }
         DConv2DCompiler::Parameters p;
         p.weights = &layer.weights;
+        p.biases = layer.hasBiases ? &layer.biases : nullptr;
         p.strides = layer.strides;
-        if(layer.hasBiases)
-          FAIL("CompiledNN does not support DepthwiseConv2D with biases.");
-        if(layer.activationId != ActivationFunctionId::linear)
-          FAIL("CompiledNN does not support DepthwiseConv2D with an activation function.");
+        OperationCompiler* extActivation;
+        p.postActivation = activationToCompiled(layer.activationId, extActivation);
         result.push_back(getCompiler<DConv2DCompiler>(settings, p, compilers));
+        if(extActivation)
+          result.push_back(extActivation);
         break;
       }
       case LayerType::cropping2D:
@@ -780,7 +781,7 @@ namespace NeuralNetwork
           // number of image channels (inputDimensions[0][2]) needs to be 1, 2 or 4.
           // For the other cases combining int-to-float-conversion and BatchNormalization into one layer is not implemented.
           if(uInt8InputCompiler && !uInt8InputCompiler->p.batchNormalization && bnCompiler->p.dimension == 2
-              && (node->inputDimensions[0][2] == 1 || node->inputDimensions[0][2] == 2 || node->inputDimensions[0][2] == 4))
+             && (node->inputDimensions[0][2] == 1 || node->inputDimensions[0][2] == 2 || node->inputDimensions[0][2] == 4))
           {
             --bnCompiler->refCount;
             --uInt8InputCompiler->refCount;
@@ -809,6 +810,16 @@ namespace NeuralNetwork
             nodeInputs[0].provider->compiler = getCompiler<Conv2DCompiler>(effSettings, p, compilers);
             continue;
           }
+          const DConv2DCompiler* dConv2DCompiler = dynamic_cast<const DConv2DCompiler*>(nodeInputs[0].provider->compiler);
+          if(dConv2DCompiler && !dConv2DCompiler->p.batchNormalization && dConv2DCompiler->p.postActivation.id == CompiledActivationFunctionId::linear && bnCompiler->p.dimension == 2)
+          {
+            --bnCompiler->refCount;
+            --dConv2DCompiler->refCount;
+            DConv2DCompiler::Parameters p = dConv2DCompiler->p;
+            p.batchNormalization = &bnCompiler->p;
+            nodeInputs[0].provider->compiler = getCompiler<DConv2DCompiler>(effSettings, p, compilers);
+            continue;
+          }
         }
 
         const ActivationCompiler* activationCompiler = dynamic_cast<const ActivationCompiler*>(opCompilers[compilerOffset]);
@@ -832,6 +843,16 @@ namespace NeuralNetwork
             Conv2DCompiler::Parameters p = conv2DCompiler->p;
             p.postActivation = activationCompiler->p.activationDesc;
             nodeInputs[0].provider->compiler = getCompiler<Conv2DCompiler>(effSettings, p, compilers);
+            continue;
+          }
+          const DConv2DCompiler* dConv2DCompiler = dynamic_cast<const DConv2DCompiler*>(nodeInputs[0].provider->compiler);
+          if(dConv2DCompiler && dConv2DCompiler->p.postActivation.id == CompiledActivationFunctionId::linear)
+          {
+            --activationCompiler->refCount;
+            --dConv2DCompiler->refCount;
+            DConv2DCompiler::Parameters p = dConv2DCompiler->p;
+            p.postActivation = activationCompiler->p.activationDesc;
+            nodeInputs[0].provider->compiler = getCompiler<DConv2DCompiler>(effSettings, p, compilers);
             continue;
           }
         }

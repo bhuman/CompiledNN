@@ -1143,10 +1143,20 @@ namespace NeuralNetwork
       VERIFY(H5Tclose(weightNamesAttributeType) >= 0);
       VERIFY(H5Aclose(weightNamesAttribute) >= 0);
 
+      // The inner weights group may not exist: we disable the error handler while opening it here
+      H5E_auto2_t oldFunc;
+      void* oldClientData;
+      H5Eget_auto2(H5E_DEFAULT, &oldFunc, &oldClientData);
+      H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+
+      // Try to open the inner weights group
       hid_t weightsGroup = H5Gopen2(layerGroup, mangledLayerName.c_str(), H5P_DEFAULT);
-      ASSERT(weightsGroup >= 0);
+
+      // Reset the old error handler
+      H5Eset_auto2(H5E_DEFAULT, oldFunc, oldClientData);
+
       const std::string mangledWeightName = weightName + ":0"; // TODO: Is this always :0? We will see.
-      hid_t weightsDataset = H5Dopen2(weightsGroup, mangledWeightName.c_str(), H5P_DEFAULT);
+      hid_t weightsDataset = H5Dopen2(weightsGroup == H5I_INVALID_HID ? layerGroup : weightsGroup, mangledWeightName.c_str(), H5P_DEFAULT);
       ASSERT(weightsDataset >= 0);
       hid_t weightsDatasetDataspace = H5Dget_space(weightsDataset);
       ASSERT(weightsDatasetDataspace >= 0);
@@ -1169,7 +1179,10 @@ namespace NeuralNetwork
 
       VERIFY(H5Sclose(weightsDatasetDataspace) >= 0);
       VERIFY(H5Dclose(weightsDataset) >= 0);
-      VERIFY(H5Gclose(weightsGroup) >= 0);
+      if(weightsGroup != H5I_INVALID_HID)
+      {
+        VERIFY(H5Gclose(weightsGroup) >= 0);
+      }
       VERIFY(H5Gclose(layerGroup) >= 0);
     };
 

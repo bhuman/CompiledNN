@@ -13,9 +13,6 @@ namespace NeuralNetwork
   {
     void SoftmaxCompiler::initialize()
     {
-      // TODO: Support any dimension.
-      ASSERT(p.dimension == 0);
-
       constants.resize(1);
 
       std::vector<float>& vals = constants.back().data;
@@ -33,15 +30,21 @@ namespace NeuralNetwork
     void SoftmaxCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input, const TensorPointerXf& output) const
     {
       ASSERT(input.dims() == output.dims());
-      // TODO: Support for >1D tensors.
-      ASSERT(input.rank() == 1);
+      ASSERT(p.dimension < input.rank());
+      for(size_t dim = 0; dim < input.rank(); ++dim)
+      {
+        if(dim == p.dimension)
+          ASSERT(input.dims(dim) > 1);
+        else
+          ASSERT(input.dims(dim) == 1); // TODO: Support for tensors with spatial dimensions > 1
+      }
 
       const bool isInplace = input.data() == output.data();
       a.mov(a.zsi(), imm(input.data()));
 
       if(!isInplace)
         a.mov(a.zdi(), imm(output.data()));
-      else if(input.dims(0) >= 4 && (input.dims(0) % 4 != 0 || (input.dims(0) + 3) / 4 > settings.xmmRegs() - 3))
+      else if(input.dims(p.dimension) >= 4 && (input.dims(p.dimension) % 4 != 0 || (input.dims(p.dimension) + 3) / 4 > settings.xmmRegs() - 3))
         a.mov(a.zdi(), a.zsi());
 
       // Load constants
@@ -52,7 +55,7 @@ namespace NeuralNetwork
       a.xorps(x86::xmm0, x86::xmm0);
 
       // Calculate sum of exponentiated values
-      unsigned int remainingChannels = input.dims(0);
+      unsigned int remainingChannels = input.dims(p.dimension);
       for(unsigned int stepSize = settings.xmmRegs() - 3; stepSize; --stepSize)
       {
         if(remainingChannels >= stepSize * 4)
@@ -77,7 +80,7 @@ namespace NeuralNetwork
           ExpApprox::apply(a, valueRegs, x86::xmm(settings.xmmRegs() - 2), x86::xmm(settings.xmmRegs() - 1));
 
           // Write back exponentiated values
-          if(stepSize * 4 != input.dims(0))
+          if(stepSize * 4 != input.dims(p.dimension))
           {
             for(unsigned int i = 0; i < stepSize; ++i)
               a.movaps(isInplace ? a.ptr_zsi(i * 4 * sizeof(float)) : a.ptr_zdi(i * 4 * sizeof(float)), x86::xmm(i + 1));
@@ -128,7 +131,7 @@ namespace NeuralNetwork
           a.cvtps2dq(x86::xmm(i + 1), x86::xmm(i + 1));
         for(unsigned int i = 0; i < remainingChannels; ++i)
           a.paddd(x86::xmm(i + 1), x86::xmm(settings.xmmRegs() - 1));
-        if(remainingChannels != input.dims(0))
+        if(remainingChannels != input.dims(p.dimension))
         {
           for(unsigned int i = 0; i < remainingChannels; ++i)
             a.movss(isInplace ? a.ptr_zsi(i * sizeof(float)) : a.ptr_zdi(i * sizeof(float)), x86::xmm(i + 1));
@@ -136,23 +139,23 @@ namespace NeuralNetwork
         for(unsigned int i = 0; i < remainingChannels; ++i)
           a.addss(x86::xmm0, x86::xmm(i + 1));
       }
-      if(input.dims(0) >= 4)
+      if(input.dims(p.dimension) >= 4)
       {
         a.haddps(x86::xmm0, x86::xmm0);
         a.haddps(x86::xmm0, x86::xmm0);
       }
 
       // Compute reciprocal of sum
-      if(input.dims(0) >= 4)
+      if(input.dims(p.dimension) >= 4)
         a.rcpps(x86::xmm0, x86::xmm0);
       else
         a.rcpss(x86::xmm0, x86::xmm0);
 
-      if(!isInplace && input.dims(0) >= 4 && (input.dims(0) % 4 != 0 || (input.dims(0) + 3) / 4 > settings.xmmRegs() - 3))
+      if(!isInplace && input.dims(p.dimension) >= 4 && (input.dims(p.dimension) % 4 != 0 || (input.dims(p.dimension) + 3) / 4 > settings.xmmRegs() - 3))
         a.mov(a.zdi(), imm(output.data()));
 
       // Calculate softmax by dividing the exponentiated values by the computed sum
-      remainingChannels = input.dims(0);
+      remainingChannels = input.dims(p.dimension);
       for(unsigned int stepSize = settings.xmmRegs() - 1; stepSize; --stepSize)
       {
         if(remainingChannels >= stepSize * 4)
@@ -167,7 +170,7 @@ namespace NeuralNetwork
           }
 
           // Multiply values by the reciprocal of the sum
-          if(stepSize > settings.xmmRegs() - 3 || stepSize * 4 != input.dims(0))
+          if(stepSize > settings.xmmRegs() - 3 || stepSize * 4 != input.dims(p.dimension))
           {
             for(unsigned int i = 0; i < stepSize; ++i)
               a.movaps(x86::xmm(i + 1), a.ptr_zdi(i * 4 * sizeof(float)));
@@ -175,7 +178,7 @@ namespace NeuralNetwork
           for(unsigned int i = 0; i < stepSize; ++i)
             a.mulps(x86::xmm(i + 1), x86::xmm0);
           for(unsigned int i = 0; i < stepSize; ++i)
-            a.movaps(stepSize > settings.xmmRegs() - 3 || stepSize * 4 != input.dims(0) || !isInplace ? a.ptr_zdi(i * 4 * sizeof(float)) : a.ptr_zsi(i * 4 * sizeof(float)), x86::xmm(i + 1));
+            a.movaps(stepSize > settings.xmmRegs() - 3 || stepSize * 4 != input.dims(p.dimension) || !isInplace ? a.ptr_zdi(i * 4 * sizeof(float)) : a.ptr_zsi(i * 4 * sizeof(float)), x86::xmm(i + 1));
 
           // Increment pointer if there will be further steps
           if(remainingChannels != stepSize * 4)
@@ -193,7 +196,7 @@ namespace NeuralNetwork
       }
       if(remainingChannels > 0)
       {
-        if(remainingChannels != input.dims(0))
+        if(remainingChannels != input.dims(p.dimension))
         {
           for(unsigned int i = 0; i < remainingChannels; ++i)
             a.movss(x86::xmm(i + 1), a.ptr_zdi(i * sizeof(float)));
@@ -201,7 +204,7 @@ namespace NeuralNetwork
         for(unsigned int i = 0; i < remainingChannels; ++i)
           a.mulss(x86::xmm(i + 1), x86::xmm0);
         for(unsigned int i = 0; i < remainingChannels; ++i)
-          a.movss((remainingChannels != input.dims(0) || !isInplace) ? a.ptr_zdi(i * sizeof(float)) : a.ptr_zsi(i * sizeof(float)), x86::xmm(i + 1));
+          a.movss((remainingChannels != input.dims(p.dimension) || !isInplace) ? a.ptr_zdi(i * sizeof(float)) : a.ptr_zsi(i * sizeof(float)), x86::xmm(i + 1));
       }
     }
   }

@@ -17,7 +17,7 @@ namespace NeuralNetwork
       {
         const BatchNormalizationCompiler::Parameters* batchNormalization = nullptr;
         const Tensor<float, 1>* weights;
-        const std::vector<float>* biases;
+        const std::vector<float>* biases = nullptr;
         ActivationFunctionDescriptor postActivation;
         std::array<unsigned int, 2> strides;
 

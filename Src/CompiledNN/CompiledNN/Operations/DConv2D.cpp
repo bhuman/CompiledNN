@@ -129,7 +129,6 @@ namespace NeuralNetwork
 
     void DConv2DCompiler::compileOutputBatch(x86::Assembler& a, ActivationFunctionHandler& afHandler, const unsigned int inputWidth, const unsigned int remainingOutputs) const
     {
-      const NetworkConstants& biases = constants[1];
       const bool inputAligned = (p.strides[1] * p.weights->dims(2)) % 4 == 0;
       const bool outputAligned = p.weights->dims(2) % 4 == 0;
       const unsigned int stepSize = (remainingOutputs + 3) / 4;
@@ -182,14 +181,18 @@ namespace NeuralNetwork
       a.jnz(filterRowLoop);
 
       // Add bias
-      for(unsigned int step = 0; step < stepSize; step++)
+      if(constants.size() > 1)
       {
-        if(step == stepSize - 1 && remainingOutputs % 4 == 1)
-          a.addss(x86::xmm(step), x86::ptr(biases.label, biasOffset + step * 4 * sizeof(float)));
-        else
-          a.addps(x86::xmm(step), x86::ptr(biases.label, biasOffset + step * 4 * sizeof(float)));
+        const NetworkConstants& biases = constants[1];
+        for(unsigned int step = 0; step < stepSize; step++)
+        {
+          if(step == stepSize - 1 && remainingOutputs % 4 == 1)
+            a.addss(x86::xmm(step), x86::ptr(biases.label, biasOffset + step * 4 * sizeof(float)));
+          else
+            a.addps(x86::xmm(step), x86::ptr(biases.label, biasOffset + step * 4 * sizeof(float)));
+        }
+        biasOffset += stepSize * 4 * sizeof(float);
       }
-      biasOffset += stepSize * 4 * sizeof(float);
 
       // Apply activation function
       if(!activationFnInitialized)
@@ -240,7 +243,7 @@ namespace NeuralNetwork
 
       // Load bias
       const unsigned int biasRegister = regsNeeded + activationRegsNeeded < settings.xmmRegs() ? regsNeeded + activationRegsNeeded : regsNeeded;
-      if(biasRegister < settings.xmmRegs())
+      if(constants.size() > 1 && biasRegister < settings.xmmRegs())
       {
         if(p.weights->dims(2) == 1)
           a.movss(x86::xmm(biasRegister), x86::ptr(constants[1].label));
@@ -249,7 +252,7 @@ namespace NeuralNetwork
       }
 
       // If some registers are free, load some weights
-      const unsigned int weightRegisterOffset = biasRegister + 1; // TODO check this
+      const unsigned int weightRegisterOffset = biasRegister + (constants.size() > 1 ? 1 : 0);
       const unsigned int weightRegisterCount = std::min(p.weights->dims(0) * inputSize, static_cast<unsigned int>(std::max(0, static_cast<int>(settings.xmmRegs()) - static_cast<int>(weightRegisterOffset))));
       const unsigned int weightRegisterMemoryOffset = (p.weights->dims(0) * inputSize - weightRegisterCount) * 4 * sizeof(float);
       for(unsigned int i = 0; i < weightRegisterCount; i++)
@@ -330,19 +333,22 @@ namespace NeuralNetwork
       }
 
       // Add bias
-      if(biasRegister < settings.xmmRegs())
+      if(constants.size() > 1)
       {
-        if(p.weights->dims(2) == 1)
-          a.addss(x86::xmm0, x86::xmm(biasRegister));
+        if(biasRegister < settings.xmmRegs())
+        {
+          if(p.weights->dims(2) == 1)
+            a.addss(x86::xmm0, x86::xmm(biasRegister));
+          else
+            a.addps(x86::xmm0, x86::xmm(biasRegister));
+        }
         else
-          a.addps(x86::xmm0, x86::xmm(biasRegister));
-      }
-      else
-      {
-        if(p.weights->dims(2) == 1)
-          a.addss(x86::xmm0, x86::ptr(constants[1].label));
-        else
-          a.addps(x86::xmm0, x86::ptr(constants[1].label));
+        {
+          if(p.weights->dims(2) == 1)
+            a.addss(x86::xmm0, x86::ptr(constants[1].label));
+          else
+            a.addps(x86::xmm0, x86::ptr(constants[1].label));
+        }
       }
 
       // Apply activation function

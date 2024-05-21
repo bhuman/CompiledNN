@@ -17,39 +17,37 @@ class In;
 
 namespace NeuralNetwork
 {
-  enum class LayerType : unsigned int
+  enum class LayerType
   {
-    dense = 1,
-    conv2D = 2,
-    reshape = 3,
-    elu = 4,
-    activation = 5,
-    maxPooling2D = 6,
-    batchNormalization = 9,
-    softmax = 10,
-    depthwiseConv2D = 11,
-    zeroPadding2D = 12,
-
-    // These layers cannot occur in kerasify files.
-    input = 100,
-    dropout,
-    flatten,
+    input,
+    dense,
+    activation,
+    conv2D,
     separableConv2D,
-    cropping2D,
-    upSampling2D,
+    depthwiseConv2D,
+    maxPooling2D,
     averagePooling2D,
     globalMaxPooling2D,
     globalAveragePooling2D,
-    add,
-    subtract,
-    multiply,
+    batchNormalization,
+    dropout,
+    reshape,
+    flatten,
+    cropping2D,
+    upSampling2D,
+    zeroPadding2D,
+    concatenate,
     average,
     maximum,
     minimum,
-    concatenate,
+    add,
+    subtract,
+    multiply,
+    relu,
+    softmax,
     leakyRelu,
-    thresholdedRelu,
-    relu
+    elu,
+    thresholdedRelu
   };
 
   struct Layer;
@@ -155,24 +153,24 @@ namespace NeuralNetwork
     void load(const std::string& file);
   };
 
-  enum class ActivationFunctionId : unsigned int
+  enum class ActivationFunctionId
   {
-    linear = 1,
-    relu = 2,
-    sigmoid = 4,
-    tanH = 5,
-    hardSigmoid = 6,
-    softmax = 7,
-    elu = 8,
-    selu = 10,
-    exponential = 11,
-    softsign = 12
+    linear,
+    relu,
+    sigmoid,
+    tanH,
+    hardSigmoid,
+    softmax,
+    elu,
+    selu,
+    exponential,
+    softsign
   };
 
-  enum class PaddingType : unsigned int
+  enum class PaddingType
   {
-    valid = 1,
-    same = 2
+    valid,
+    same
   };
 
   enum class InterpolationMethod
@@ -181,10 +179,10 @@ namespace NeuralNetwork
     bilinear
   };
 
-  enum class PoolingMethod : unsigned int
+  enum class PoolingMethod
   {
-    average = 1,
-    max = 2
+    average,
+    max
   };
 
   struct InputLayer : Layer
@@ -213,29 +211,6 @@ namespace NeuralNetwork
     ActivationFunctionId activationId;
 
     ActivationLayer() : Layer(LayerType::activation) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct DropoutLayer : Layer
-  {
-    DropoutLayer() : Layer(LayerType::dropout) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct FlattenLayer : Layer
-  {
-    FlattenLayer() : Layer(LayerType::flatten) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct ReshapeLayer : Layer
-  {
-    std::vector<unsigned int> dimensions;
-
-    ReshapeLayer() : Layer(LayerType::reshape) {}
 
     void calcOutputDimensions(Node& node) const override;
   };
@@ -283,6 +258,81 @@ namespace NeuralNetwork
     void calcOutputDimensions(Node& node) const override;
   };
 
+  struct Pooling2DLayer : Layer
+  {
+    PoolingMethod method;
+    PaddingType padding;
+    std::array<unsigned int, 2> kernelSize;
+    std::array<unsigned int, 2> strides;
+
+    Pooling2DLayer(LayerType type, PoolingMethod method) : Layer(type), method(method) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct MaxPooling2DLayer : Pooling2DLayer
+  {
+    MaxPooling2DLayer() : Pooling2DLayer(LayerType::maxPooling2D, PoolingMethod::max) {}
+  };
+
+  struct AveragePooling2DLayer : Pooling2DLayer
+  {
+    AveragePooling2DLayer() : Pooling2DLayer(LayerType::averagePooling2D, PoolingMethod::average) {}
+  };
+
+  struct GlobalPooling2DLayer : Layer
+  {
+    PoolingMethod method;
+
+    GlobalPooling2DLayer(LayerType type, PoolingMethod method) : Layer(type), method(method) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct GlobalMaxPooling2DLayer : GlobalPooling2DLayer
+  {
+    GlobalMaxPooling2DLayer() : GlobalPooling2DLayer(LayerType::globalMaxPooling2D, PoolingMethod::max) {}
+  };
+
+  struct GlobalAveragePooling2DLayer : GlobalPooling2DLayer
+  {
+    GlobalAveragePooling2DLayer() : GlobalPooling2DLayer(LayerType::globalAveragePooling2D, PoolingMethod::average) {}
+  };
+
+  struct BatchNormalizationLayer : Layer
+  {
+    int axis;
+    std::vector<float> factor;
+    std::vector<float> offset;
+
+    BatchNormalizationLayer() : Layer(LayerType::batchNormalization) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct DropoutLayer : Layer
+  {
+    DropoutLayer() : Layer(LayerType::dropout) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct ReshapeLayer : Layer
+  {
+    std::vector<unsigned int> dimensions;
+
+    ReshapeLayer() : Layer(LayerType::reshape) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct FlattenLayer : Layer
+  {
+    FlattenLayer() : Layer(LayerType::flatten) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
   struct Cropping2DLayer : Layer
   {
     enum Side
@@ -325,64 +375,11 @@ namespace NeuralNetwork
     void calcOutputDimensions(Node& node) const override;
   };
 
-  struct Pooling2DLayer : Layer
+  struct ConcatenateLayer : Layer
   {
-    PoolingMethod method;
-    PaddingType padding;
-    std::array<unsigned int, 2> kernelSize;
-    std::array<unsigned int, 2> strides;
+    int axis;
 
-    Pooling2DLayer(LayerType type, PoolingMethod method) : Layer(type), method(method) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct MaxPooling2DLayer : Pooling2DLayer
-  {
-    MaxPooling2DLayer() : Pooling2DLayer(LayerType::maxPooling2D, PoolingMethod::max) {}
-  };
-
-  struct AveragePooling2DLayer : Pooling2DLayer
-  {
-    AveragePooling2DLayer() : Pooling2DLayer(LayerType::averagePooling2D, PoolingMethod::average) {}
-  };
-
-  struct GlobalPooling2DLayer : Layer
-  {
-    PoolingMethod method;
-
-    GlobalPooling2DLayer(LayerType type, PoolingMethod method) : Layer(type), method(method) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct GlobalMaxPooling2DLayer : GlobalPooling2DLayer
-  {
-    GlobalMaxPooling2DLayer() : GlobalPooling2DLayer(LayerType::globalMaxPooling2D, PoolingMethod::max) {}
-  };
-
-  struct GlobalAveragePooling2DLayer : GlobalPooling2DLayer
-  {
-    GlobalAveragePooling2DLayer() : GlobalPooling2DLayer(LayerType::globalAveragePooling2D, PoolingMethod::average) {}
-  };
-
-  struct AddLayer : Layer
-  {
-    AddLayer() : Layer(LayerType::add) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct SubtractLayer : Layer
-  {
-    SubtractLayer() : Layer(LayerType::subtract) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct MultiplyLayer : Layer
-  {
-    MultiplyLayer() : Layer(LayerType::multiply) {}
+    ConcatenateLayer() : Layer(LayerType::concatenate) {}
 
     void calcOutputDimensions(Node& node) const override;
   };
@@ -408,11 +405,43 @@ namespace NeuralNetwork
     void calcOutputDimensions(Node& node) const override;
   };
 
-  struct ConcatenateLayer : Layer
+  struct AddLayer : Layer
+  {
+    AddLayer() : Layer(LayerType::add) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct SubtractLayer : Layer
+  {
+    SubtractLayer() : Layer(LayerType::subtract) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct MultiplyLayer : Layer
+  {
+    MultiplyLayer() : Layer(LayerType::multiply) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct ReluLayer : Layer
+  {
+    float maxValue;
+    float negativeSlope;
+    float threshold;
+
+    ReluLayer() : Layer(LayerType::relu) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct SoftmaxLayer : Layer
   {
     int axis;
 
-    ConcatenateLayer() : Layer(LayerType::concatenate) {}
+    SoftmaxLayer() : Layer(LayerType::softmax) {}
 
     void calcOutputDimensions(Node& node) const override;
   };
@@ -440,37 +469,6 @@ namespace NeuralNetwork
     float theta;
 
     ThresholdedReluLayer() : Layer(LayerType::thresholdedRelu) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct SoftmaxLayer : Layer
-  {
-    int axis;
-
-    SoftmaxLayer() : Layer(LayerType::softmax) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct ReluLayer : Layer
-  {
-    float maxValue;
-    float negativeSlope;
-    float threshold;
-
-    ReluLayer() : Layer(LayerType::relu) {}
-
-    void calcOutputDimensions(Node& node) const override;
-  };
-
-  struct BatchNormalizationLayer : Layer
-  {
-    int axis;
-    std::vector<float> factor;
-    std::vector<float> offset;
-
-    BatchNormalizationLayer() : Layer(LayerType::batchNormalization) {}
 
     void calcOutputDimensions(Node& node) const override;
   };

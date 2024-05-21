@@ -48,6 +48,16 @@ namespace NeuralNetwork
     node.outputDimensions = node.inputDimensions;
   }
 
+  void Conv1DLayer::calcOutputDimensions(Node& node) const
+  {
+    ASSERT(node.inputDimensions.size() == 1);
+    ASSERT(node.inputDimensions[0].size() == 2);
+    ASSERT(padding == PaddingType::same || node.inputDimensions[0][0] >= weights.dims(0));
+    ASSERT(node.inputDimensions[0][1] == weights.dims(1));
+    node.outputDimensions.push_back({{(node.inputDimensions[0][0] - (padding == PaddingType::valid ? weights.dims(0) - 1 : 0) + stride - 1) / stride,
+                                      weights.dims(2)}});
+  }
+
   void Conv2DLayer::calcOutputDimensions(Node& node) const
   {
     ASSERT(node.inputDimensions.size() == 1);
@@ -83,6 +93,15 @@ namespace NeuralNetwork
     node.outputDimensions.push_back({{(node.inputDimensions[0][0] - (padding == PaddingType::valid ? weights.dims(0) - 1 : 0) + strides[0] - 1) / strides[0],
                                       (node.inputDimensions[0][1] - (padding == PaddingType::valid ? weights.dims(1) - 1 : 0) + strides[1] - 1) / strides[1],
                                       node.inputDimensions[0][2] * weights.dims(3)}});
+  }
+
+  void Pooling1DLayer::calcOutputDimensions(Node& node) const
+  {
+    ASSERT(node.inputDimensions.size() == 1);
+    ASSERT(node.inputDimensions[0].size() == 2);
+    ASSERT(padding == PaddingType::same || node.inputDimensions[0][0] >= kernelSize);
+    node.outputDimensions.push_back({{(node.inputDimensions[0][0] - (padding == PaddingType::valid ? kernelSize - 1 : 0) + stride - 1) / stride,
+                                      node.inputDimensions[0][1]}});
   }
 
   void Pooling2DLayer::calcOutputDimensions(Node& node) const

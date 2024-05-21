@@ -22,10 +22,13 @@ namespace NeuralNetwork
     input,
     dense,
     activation,
+    conv1D,
     conv2D,
     separableConv2D,
     depthwiseConv2D,
+    maxPooling1D,
     maxPooling2D,
+    averagePooling1D,
     averagePooling2D,
     globalMaxPooling2D,
     globalAveragePooling2D,
@@ -215,6 +218,20 @@ namespace NeuralNetwork
     void calcOutputDimensions(Node& node) const override;
   };
 
+  struct Conv1DLayer : Layer
+  {
+    unsigned int stride;
+    Tensor<float, 1> weights;
+    std::vector<float> biases;
+    bool hasBiases;
+    ActivationFunctionId activationId;
+    PaddingType padding;
+
+    Conv1DLayer() : Layer(LayerType::conv1D) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
   struct Conv2DLayer : Layer
   {
     std::array<unsigned int, 2> strides;
@@ -258,6 +275,18 @@ namespace NeuralNetwork
     void calcOutputDimensions(Node& node) const override;
   };
 
+  struct Pooling1DLayer : Layer
+  {
+    PoolingMethod method;
+    PaddingType padding;
+    unsigned int kernelSize;
+    unsigned int stride;
+
+    Pooling1DLayer(LayerType type, PoolingMethod method) : Layer(type), method(method) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
   struct Pooling2DLayer : Layer
   {
     PoolingMethod method;
@@ -270,9 +299,19 @@ namespace NeuralNetwork
     void calcOutputDimensions(Node& node) const override;
   };
 
+  struct MaxPooling1DLayer : Pooling1DLayer
+  {
+    MaxPooling1DLayer() : Pooling1DLayer(LayerType::maxPooling1D, PoolingMethod::max) {}
+  };
+
   struct MaxPooling2DLayer : Pooling2DLayer
   {
     MaxPooling2DLayer() : Pooling2DLayer(LayerType::maxPooling2D, PoolingMethod::max) {}
+  };
+
+  struct AveragePooling1DLayer : Pooling1DLayer
+  {
+    AveragePooling1DLayer() : Pooling1DLayer(LayerType::averagePooling1D, PoolingMethod::average) {}
   };
 
   struct AveragePooling2DLayer : Pooling2DLayer

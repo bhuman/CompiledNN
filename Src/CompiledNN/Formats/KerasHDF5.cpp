@@ -215,6 +215,59 @@ namespace NeuralNetwork
     return layer;
   }
 
+  std::unique_ptr<Layer> parseConv1DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType& getWeights, unsigned long)
+  {
+#ifndef NDEBUG
+    const unsigned int filters = getLiteral<unsigned int>(getRecordEntry<SimpleMap::Literal>(config, "filters"));
+    const SimpleMap::Array* kernelSize = getRecordEntry<SimpleMap::Array>(config, "kernel_size");
+#endif
+    const SimpleMap::Array* strides = getRecordEntry<SimpleMap::Array>(config, "strides");
+    const std::string padding = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "padding"));
+    const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
+    const SimpleMap::Array* dilationRate = getRecordEntry<SimpleMap::Array>(config, "dilation_rate");
+    const std::string activation = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "activation"));
+    const bool useBias = getLiteral<bool>(getRecordEntry<SimpleMap::Literal>(config, "use_bias"));
+
+    ASSERT(filters > 0);
+    ASSERT(kernelSize->size() == 1);
+    ASSERT(strides->size() == 1);
+    ASSERT(dilationRate->size() == 1);
+    if(dataFormat != "channels_last")
+      FAIL("Data formats other than channels last are not supported.");
+    if(getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(dilationRate, 0)) != 1)
+      FAIL("Conv1D layers with a dilation rate other than (1) are currently not supported.");
+#ifndef NDEBUG
+    const unsigned int kernelHeight = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(kernelSize, 0));
+#endif
+    const unsigned int stride = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(strides, 0));
+    ASSERT(kernelHeight > 0);
+    ASSERT(stride > 0);
+
+    std::unique_ptr<Conv1DLayer> layer = std::make_unique<Conv1DLayer>();
+    layer->stride = stride;
+    layer->activationId = parseActivation(activation);
+    layer->padding = parsePadding(padding);
+    layer->hasBiases = useBias;
+
+    std::vector<float> weights;
+    std::vector<unsigned int> dimensions;
+    getWeights("kernel", weights, dimensions);
+    ASSERT(dimensions.size() == 3);
+    ASSERT(dimensions[0] == kernelHeight);
+    ASSERT(dimensions[1] > 0);
+    ASSERT(dimensions[2] == filters);
+    layer->weights.reshape(dimensions[0], dimensions[1], dimensions[2]);
+    std::copy(weights.begin(), weights.end(), layer->weights.begin());
+    if(useBias)
+    {
+      getWeights("bias", weights, dimensions);
+      ASSERT(dimensions.size() == 1);
+      ASSERT(dimensions[0] == filters);
+      layer->biases = weights;
+    }
+    return layer;
+  }
+
   std::unique_ptr<Layer> parseConv2DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType& getWeights, unsigned long)
   {
 #ifndef NDEBUG
@@ -480,6 +533,30 @@ namespace NeuralNetwork
     return layer;
   }
 
+  std::unique_ptr<Layer> parsePooling1DLayer(const SimpleMap::Record* config, PoolingMethod method, unsigned long)
+  {
+    const SimpleMap::Array* poolSize = getRecordEntry<SimpleMap::Array>(config, "pool_size");
+    const std::string padding = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "padding"));
+    const SimpleMap::Array* strides = getRecordEntry<SimpleMap::Array>(config, "strides");
+    const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
+
+    ASSERT(poolSize->size() == 1);
+    ASSERT(strides->size() == 1);
+    if(dataFormat != "channels_last")
+      FAIL("Data formats other than channels last are not supported.");
+    const unsigned int poolVertical = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(poolSize, 0));
+    const unsigned int stride = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(strides, 0));
+    ASSERT(poolVertical > 0);
+    ASSERT(stride > 0);
+
+    std::unique_ptr<Pooling1DLayer> layer = std::make_unique<Pooling1DLayer>(method == PoolingMethod::max ? LayerType::maxPooling1D : LayerType::averagePooling1D, method);
+    layer->method = method;
+    layer->padding = parsePadding(padding);
+    layer->kernelSize = poolVertical;
+    layer->stride = stride;
+    return layer;
+  }
+
   std::unique_ptr<Layer> parsePooling2DLayer(const SimpleMap::Record* config, PoolingMethod method, unsigned long)
   {
     const SimpleMap::Array* poolSize = getRecordEntry<SimpleMap::Array>(config, "pool_size");
@@ -510,9 +587,19 @@ namespace NeuralNetwork
     return layer;
   }
 
+  std::unique_ptr<Layer> parseMaxPooling1DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long kerasVersion)
+  {
+    return parsePooling1DLayer(config, PoolingMethod::max, kerasVersion);
+  }
+
   std::unique_ptr<Layer> parseMaxPooling2DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long kerasVersion)
   {
     return parsePooling2DLayer(config, PoolingMethod::max, kerasVersion);
+  }
+
+  std::unique_ptr<Layer> parseAveragePooling1DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long kerasVersion)
+  {
+    return parsePooling1DLayer(config, PoolingMethod::average, kerasVersion);
   }
 
   std::unique_ptr<Layer> parseAveragePooling2DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long kerasVersion)
@@ -707,6 +794,7 @@ namespace NeuralNetwork
     layerParsers.emplace("Flatten", &parseFlattenLayer);
     layerParsers.emplace("Reshape", &parseReshapeLayer);
     // Convolutional layers
+    layerParsers.emplace("Conv1D", &parseConv1DLayer);
     layerParsers.emplace("Conv2D", &parseConv2DLayer);
     layerParsers.emplace("SeparableConv2D", &parseSeparableConv2DLayer);
     if(kerasVersion >= makeVersion(2, 1, 5))
@@ -715,7 +803,9 @@ namespace NeuralNetwork
     layerParsers.emplace("UpSampling2D", &parseUpSampling2DLayer);
     layerParsers.emplace("ZeroPadding2D", &parseZeroPadding2DLayer);
     // Pooling layers
+    layerParsers.emplace("MaxPooling1D", &parseMaxPooling1DLayer);
     layerParsers.emplace("MaxPooling2D", &parseMaxPooling2DLayer);
+    layerParsers.emplace("AveragePooling1D", &parseAveragePooling1DLayer);
     layerParsers.emplace("AveragePooling2D", &parseAveragePooling2DLayer);
     layerParsers.emplace("GlobalMaxPooling2D", &parseGlobalMaxPooling2DLayer);
     layerParsers.emplace("GlobalAveragePooling2D", &parseGlobalAveragePooling2DLayer);

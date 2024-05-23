@@ -38,6 +38,7 @@ namespace NeuralNetwork
     flatten,
     cropping2D,
     upSampling2D,
+    zeroPadding1D,
     zeroPadding2D,
     concatenate,
     average,
@@ -394,6 +395,20 @@ namespace NeuralNetwork
     InterpolationMethod interpolation;
 
     UpSampling2DLayer() : Layer(LayerType::upSampling2D) {}
+
+    void calcOutputDimensions(Node& node) const override;
+  };
+
+  struct ZeroPadding1DLayer : Layer
+  {
+    enum Side
+    {
+      LEFT,
+      RIGHT,
+    };
+    std::array<unsigned int, 2> padding;
+
+    ZeroPadding1DLayer() : Layer(LayerType::zeroPadding1D) {}
 
     void calcOutputDimensions(Node& node) const override;
   };

@@ -366,6 +366,30 @@ namespace NeuralNetwork
         }
       }
 
+      void apply(const TensorXf& input, TensorXf& output, const ZeroPadding1DLayer& layer)
+      {
+        ASSERT(input.rank() == 2);
+        ASSERT(output.rank() == 2);
+
+        std::vector<unsigned int> i(2);
+
+        for(i[0] = 0; i[0] < output.dims(1); i[0]++)
+        {
+          if(i[0] < layer.padding[ZeroPadding1DLayer::LEFT] || output.dims(0) - i[0] <= layer.padding[ZeroPadding1DLayer::RIGHT])
+          {
+            for(i[1] = 0; i[1] < output.dims(1); i[1]++)
+              output(i) = 0.f;
+          }
+          else
+          {
+            std::vector<unsigned int> i_ = i;
+            i_[0] = i[0] - layer.padding[ZeroPadding1DLayer::LEFT];
+            for(i_[1] = i[1] = 0; i_[1] < output.dims(1); i_[1]++, i[1]++)
+              output(i) = input(i_);
+          }
+        }
+      }
+
       void apply(const TensorXf& input, TensorXf& output, const ZeroPadding2DLayer& layer)
       {
         ASSERT(input.rank() == 3);
@@ -812,6 +836,11 @@ namespace NeuralNetwork
           ASSERT(input.size() == 1);
           ASSERT(output.size() == 1);
           Impl::apply(*input[0], *output[0], *static_cast<const UpSampling2DLayer*>(node.layer));
+          break;
+        case LayerType::zeroPadding1D:
+          ASSERT(input.size() == 1);
+          ASSERT(output.size() == 1);
+          Impl::apply(*input[0], *output[0], *static_cast<const ZeroPadding1DLayer*>(node.layer));
           break;
         case LayerType::zeroPadding2D:
           ASSERT(input.size() == 1);

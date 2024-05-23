@@ -508,6 +508,23 @@ namespace NeuralNetwork
     return layer;
   }
 
+  std::unique_ptr<Layer> parseZeroPadding1DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long)
+  {
+    const SimpleMap::Array* padding = getRecordEntry<SimpleMap::Array>(config, "padding");
+    const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
+
+    if(dataFormat != "channels_last")
+      FAIL("Data formats other than channels last are not supported.");
+    ASSERT(padding->size() == 2);
+    const unsigned int leftPadding = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(padding, 0));
+    const unsigned int rightPadding = getLiteral<unsigned int>(getArrayEntry<SimpleMap::Literal>(padding, 1));
+
+    std::unique_ptr<ZeroPadding1DLayer> layer = std::make_unique<ZeroPadding1DLayer>();
+    layer->padding[ZeroPadding1DLayer::LEFT] = leftPadding;
+    layer->padding[ZeroPadding1DLayer::RIGHT] = rightPadding;
+    return layer;
+  }
+
   std::unique_ptr<Layer> parseZeroPadding2DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long)
   {
     const SimpleMap::Array* padding = getRecordEntry<SimpleMap::Array>(config, "padding");
@@ -801,6 +818,7 @@ namespace NeuralNetwork
       layerParsers.emplace("DepthwiseConv2D", &parseDepthwiseConv2DLayer);
     layerParsers.emplace("Cropping2D", &parseCropping2DLayer);
     layerParsers.emplace("UpSampling2D", &parseUpSampling2DLayer);
+    layerParsers.emplace("ZeroPadding1D", &parseZeroPadding1DLayer);
     layerParsers.emplace("ZeroPadding2D", &parseZeroPadding2DLayer);
     // Pooling layers
     layerParsers.emplace("MaxPooling1D", &parseMaxPooling1DLayer);

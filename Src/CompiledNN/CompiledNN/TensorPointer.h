@@ -10,6 +10,7 @@
 #include "Platform/BHAssert.h"
 #include "../Tensor.h"
 #include <vector>
+#include <numeric>
 
 namespace NeuralNetwork
 {
@@ -43,11 +44,7 @@ namespace NeuralNetwork
 
     inline constexpr std::size_t size() const
     {
-      auto it = dimensions.cbegin();
-      size_t size = *it;
-      for(it++; it != dimensions.cend(); it++)
-        size *= *it;
-      return size;
+      return std::accumulate(dimensions.cbegin(), dimensions.cend(), std::size_t(1), std::multiplies<>());
     }
 
   };

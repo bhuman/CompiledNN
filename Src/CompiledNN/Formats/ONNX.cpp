@@ -37,4 +37,3 @@ namespace NeuralNetwork
     FAIL("Not yet implemented.");
   }
 }
-

@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <cstdint>
 #include <type_traits>
 #include <vector>
 

@@ -93,6 +93,9 @@ int main(int argc, char* argv[])
       case NeuralNetwork::LayerType::reshape:
         std::cout << "Reshape";
         break;
+      case NeuralNetwork::LayerType::conv1D:
+        std::cout << "Conv1D";
+        break;
       case NeuralNetwork::LayerType::conv2D:
         std::cout << "Conv2D";
         break;
@@ -108,8 +111,17 @@ int main(int argc, char* argv[])
       case NeuralNetwork::LayerType::upSampling2D:
         std::cout << "UpSampling2D";
         break;
+      case NeuralNetwork::LayerType::zeroPadding1D:
+        std::cout << "ZeroPadding1D";
+        break;
       case NeuralNetwork::LayerType::zeroPadding2D:
         std::cout << "ZeroPadding2D";
+        break;
+      case NeuralNetwork::LayerType::maxPooling1D:
+        std::cout << "MaxPooling1D";
+        break;
+      case NeuralNetwork::LayerType::averagePooling1D:
+        std::cout << "AveragePooling1D";
         break;
       case NeuralNetwork::LayerType::maxPooling2D:
         std::cout << "MaxPooling2D";

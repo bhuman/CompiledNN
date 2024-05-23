@@ -87,25 +87,40 @@ namespace NeuralNetwork
       return CompiledActivationFunctionId::linear;
     };
 
-    auto getPadding = [&compilers, &node, &settings](const std::array<unsigned int, 2>& kernelSize, const std::array<unsigned int, 2>& strides) -> OperationCompiler*
+    auto getPadding = [&compilers, &node, &settings](const std::vector<unsigned int>& kernelSize, const std::vector<unsigned int>& strides) -> OperationCompiler*
     {
       ASSERT(node.inputDimensions.size() == 1);
-      ASSERT(node.inputDimensions[0].size() == 3);
-      const unsigned int verticalRemainder = node.inputDimensions[0][0] % strides[0];
-      const unsigned int horizontalRemainder = node.inputDimensions[0][1] % strides[1];
-      const unsigned int verticalPadding = std::max<int>(0, static_cast<int>(kernelSize[0]) -
-                                                         (verticalRemainder ? verticalRemainder : strides[0]));
-      const unsigned int horizontalPadding = std::max<int>(0, static_cast<int>(kernelSize[1]) -
-                                                           (horizontalRemainder ? horizontalRemainder : strides[1]));
-      if(!verticalPadding && !horizontalPadding)
+      ASSERT(kernelSize.size() == strides.size());
+
+      std::vector<unsigned int> padding(kernelSize.size());
+      for(std::size_t i=0;i<padding.size();i++)
+      {
+        const unsigned int remainder = node.inputDimensions[0][i] % strides[i];
+        padding[i] = std::max<int>(0, static_cast<int>(kernelSize[i]) - (remainder ? remainder : strides[i]));
+      }
+
+      if(std::accumulate<>(padding.cbegin(), padding.cend(), 0u) == 0u)
         return nullptr;
 
-      ZeroPadding2DCompiler::Parameters p;
-      p.padding[ZeroPadding2DLayer::TOP] = verticalPadding / 2;
-      p.padding[ZeroPadding2DLayer::BOTTOM] = (verticalPadding + 1) / 2;
-      p.padding[ZeroPadding2DLayer::LEFT] = horizontalPadding / 2;
-      p.padding[ZeroPadding2DLayer::RIGHT] = (horizontalPadding + 1) / 2;
-      return getCompiler<ZeroPadding2DCompiler>(settings, p, compilers);
+      ASSERT(node.inputDimensions[0].size() == padding.size() + 1);
+      if(padding.size() == 1)
+      {
+        ZeroPadding1DCompiler::Parameters p;
+        p.padding[ZeroPadding1DLayer::LEFT] = padding[0] / 2;
+        p.padding[ZeroPadding1DLayer::RIGHT] = (padding[0] + 1) / 2;
+        return getCompiler<ZeroPadding1DCompiler>(settings, p, compilers);
+      }
+      else if(padding.size() == 2)
+      {
+        ZeroPadding2DCompiler::Parameters p;
+        p.padding[ZeroPadding2DLayer::TOP] = padding[0] / 2;
+        p.padding[ZeroPadding2DLayer::BOTTOM] = (padding[0] + 1) / 2;
+        p.padding[ZeroPadding2DLayer::LEFT] = padding[1] / 2;
+        p.padding[ZeroPadding2DLayer::RIGHT] = (padding[1] + 1) / 2;
+        return getCompiler<ZeroPadding2DCompiler>(settings, p, compilers);
+      }
+      FAIL("Padding not supported");
+      return nullptr;
     };
 
     std::vector<OperationCompiler*> result;
@@ -147,12 +162,32 @@ namespace NeuralNetwork
         break;
       case LayerType::reshape:
         break;
+      case LayerType::conv1D:
+      {
+        const Conv1DLayer& layer = *static_cast<const Conv1DLayer*>(node.layer);
+        if(layer.padding == PaddingType::same)
+        {
+          OperationCompiler* extPadding = getPadding({layer.weights.dims(0)}, {layer.stride});
+          if(extPadding)
+            result.push_back(extPadding);
+        }
+        Conv1DCompiler::Parameters p;
+        p.weights = &layer.weights;
+        p.biases = layer.hasBiases ? &layer.biases : nullptr;
+        p.stride = layer.stride;
+        OperationCompiler* extActivation;
+        p.postActivation = activationToCompiled(layer.activationId, extActivation);
+        result.push_back(getCompiler<Conv1DCompiler>(settings, p, compilers));
+        if(extActivation)
+          result.push_back(extActivation);
+        break;
+      }
       case LayerType::conv2D:
       {
         const Conv2DLayer& layer = *static_cast<const Conv2DLayer*>(node.layer);
         if(layer.padding == PaddingType::same)
         {
-          OperationCompiler* extPadding = getPadding({{layer.weights.dims(0), layer.weights.dims(1)}}, layer.strides);
+          OperationCompiler* extPadding = getPadding({{layer.weights.dims(0), layer.weights.dims(1)}}, {{layer.strides[0], layer.strides[1]}});
           if(extPadding)
             result.push_back(extPadding);
         }
@@ -172,7 +207,7 @@ namespace NeuralNetwork
         const SeparableConv2DLayer& layer = *static_cast<const SeparableConv2DLayer*>(node.layer);
         if(layer.padding == PaddingType::same)
         {
-          OperationCompiler* extPadding = getPadding({{layer.depthwiseWeights.dims(0), layer.depthwiseWeights.dims(1)}}, layer.strides);
+          OperationCompiler* extPadding = getPadding({{layer.depthwiseWeights.dims(0), layer.depthwiseWeights.dims(1)}}, {{layer.strides[0], layer.strides[1]}});
           if(extPadding)
             result.push_back(extPadding);
         }
@@ -198,7 +233,7 @@ namespace NeuralNetwork
         const DepthwiseConv2DLayer& layer = *static_cast<const DepthwiseConv2DLayer*>(node.layer);
         if(layer.padding == PaddingType::same)
         {
-          OperationCompiler* extPadding = getPadding({{layer.weights.dims(0), layer.weights.dims(1)}}, layer.strides);
+          OperationCompiler* extPadding = getPadding({{layer.weights.dims(0), layer.weights.dims(1)}}, {{layer.strides[0], layer.strides[1]}});
           if(extPadding)
             result.push_back(extPadding);
         }
@@ -231,12 +266,32 @@ namespace NeuralNetwork
         result.push_back(getCompiler<UpSampling2DCompiler>(settings, p, compilers));
         break;
       }
+      case LayerType::zeroPadding1D:
+      {
+        const ZeroPadding1DLayer& layer = *static_cast<const ZeroPadding1DLayer*>(node.layer);
+        ZeroPadding1DCompiler::Parameters p;
+        p.padding = layer.padding;
+        result.push_back(getCompiler<ZeroPadding1DCompiler>(settings, p, compilers));
+        break;
+      }
       case LayerType::zeroPadding2D:
       {
         const ZeroPadding2DLayer& layer = *static_cast<const ZeroPadding2DLayer*>(node.layer);
         ZeroPadding2DCompiler::Parameters p;
         p.padding = layer.padding;
         result.push_back(getCompiler<ZeroPadding2DCompiler>(settings, p, compilers));
+        break;
+      }
+      case LayerType::maxPooling1D:
+      case LayerType::averagePooling1D:
+      {
+        const Pooling1DLayer& layer = *static_cast<const Pooling1DLayer*>(node.layer);
+        Pooling1DCompiler::Parameters p;
+        p.padding = layer.padding;
+        p.kernelSize = layer.kernelSize;
+        p.stride = layer.stride;
+        p.method = layer.method;
+        result.push_back(getCompiler<Pooling1DCompiler>(settings, p, compilers));
         break;
       }
       case LayerType::maxPooling2D:
@@ -800,6 +855,16 @@ namespace NeuralNetwork
             nodeInputs[0].provider->compiler = getCompiler<DenseCompiler>(effSettings, p, compilers);
             continue;
           }
+          const Conv1DCompiler* conv1DCompiler = dynamic_cast<const Conv1DCompiler*>(nodeInputs[0].provider->compiler);
+          if(conv1DCompiler && !conv1DCompiler->p.batchNormalization && conv1DCompiler->p.postActivation.id == CompiledActivationFunctionId::linear && bnCompiler->p.dimension == 1)
+          {
+            --bnCompiler->refCount;
+            --conv1DCompiler->refCount;
+            Conv1DCompiler::Parameters p = conv1DCompiler->p;
+            p.batchNormalization = &bnCompiler->p;
+            nodeInputs[0].provider->compiler = getCompiler<Conv1DCompiler>(effSettings, p, compilers);
+            continue;
+          }
           const Conv2DCompiler* conv2DCompiler = dynamic_cast<const Conv2DCompiler*>(nodeInputs[0].provider->compiler);
           if(conv2DCompiler && !conv2DCompiler->p.batchNormalization && bnCompiler->p.dimension == 2)
           {
@@ -833,6 +898,16 @@ namespace NeuralNetwork
             DenseCompiler::Parameters p = denseCompiler->p;
             p.postActivation = activationCompiler->p.activationDesc;
             nodeInputs[0].provider->compiler = getCompiler<DenseCompiler>(effSettings, p, compilers);
+            continue;
+          }
+          const Conv1DCompiler* conv1DCompiler = dynamic_cast<const Conv1DCompiler*>(nodeInputs[0].provider->compiler);
+          if(conv1DCompiler && conv1DCompiler->p.postActivation.id == CompiledActivationFunctionId::linear)
+          {
+            --activationCompiler->refCount;
+            --conv1DCompiler->refCount;
+            Conv1DCompiler::Parameters p = conv1DCompiler->p;
+            p.postActivation = activationCompiler->p.activationDesc;
+            nodeInputs[0].provider->compiler = getCompiler<Conv1DCompiler>(effSettings, p, compilers);
             continue;
           }
           const Conv2DCompiler* conv2DCompiler = dynamic_cast<const Conv2DCompiler*>(nodeInputs[0].provider->compiler);
@@ -976,4 +1051,3 @@ namespace NeuralNetwork
     compilerBackend(operations, compilers, inputLocations, outputLocations, settings);
   }
 }
-

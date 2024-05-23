@@ -34,6 +34,8 @@ add_library(CompiledNN
     Src/CompiledNN/CompiledNN/Operations/BatchNormalization.h
     Src/CompiledNN/CompiledNN/Operations/Concatenate.cpp
     Src/CompiledNN/CompiledNN/Operations/Concatenate.h
+    Src/CompiledNN/CompiledNN/Operations/Conv1D.cpp
+    Src/CompiledNN/CompiledNN/Operations/Conv1D.h
     Src/CompiledNN/CompiledNN/Operations/Conv2D.cpp
     Src/CompiledNN/CompiledNN/Operations/Conv2D.h
     Src/CompiledNN/CompiledNN/Operations/Cropping2D.cpp
@@ -46,6 +48,8 @@ add_library(CompiledNN
     Src/CompiledNN/CompiledNN/Operations/GlobalPooling2D.h
     Src/CompiledNN/CompiledNN/Operations/Im2Col2D.cpp
     Src/CompiledNN/CompiledNN/Operations/Im2Col2D.h
+    Src/CompiledNN/CompiledNN/Operations/Pooling1D.cpp
+    Src/CompiledNN/CompiledNN/Operations/Pooling1D.h
     Src/CompiledNN/CompiledNN/Operations/Pooling2D.cpp
     Src/CompiledNN/CompiledNN/Operations/Pooling2D.h
     Src/CompiledNN/CompiledNN/Operations/Softmax.cpp
@@ -54,6 +58,8 @@ add_library(CompiledNN
     Src/CompiledNN/CompiledNN/Operations/UInt8Input.h
     Src/CompiledNN/CompiledNN/Operations/UpSampling2D.cpp
     Src/CompiledNN/CompiledNN/Operations/UpSampling2D.h
+    Src/CompiledNN/CompiledNN/Operations/ZeroPadding1D.cpp
+    Src/CompiledNN/CompiledNN/Operations/ZeroPadding1D.h
     Src/CompiledNN/CompiledNN/Operations/ZeroPadding2D.cpp
     Src/CompiledNN/CompiledNN/Operations/ZeroPadding2D.h
     Src/CompiledNN/CompiledNN/Util/ExpApprox.cpp

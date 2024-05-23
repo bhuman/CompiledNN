@@ -177,6 +177,14 @@ namespace NeuralNetwork
     node.outputDimensions[0][1] *= size[1];
   }
 
+  void ZeroPadding1DLayer::calcOutputDimensions(Node& node) const
+  {
+    ASSERT(node.inputDimensions.size() == 1);
+    ASSERT(node.inputDimensions[0].size() == 2);
+    node.outputDimensions = node.inputDimensions;
+    node.outputDimensions[0][0] += padding[LEFT] + padding[RIGHT];
+  }
+
   void ZeroPadding2DLayer::calcOutputDimensions(Node& node) const
   {
     ASSERT(node.inputDimensions.size() == 1);

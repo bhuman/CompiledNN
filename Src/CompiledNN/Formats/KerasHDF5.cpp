@@ -96,9 +96,10 @@ namespace NeuralNetwork
     return InterpolationMethod::nearest;
   }
 
-  std::unique_ptr<Layer> parseInputLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long)
+  std::unique_ptr<Layer> parseInputLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long kerasVersion)
   {
-    const SimpleMap::Array* batchInputShape = getRecordEntry<SimpleMap::Array>(config, "batch_input_shape");
+    const std::string batchInputShapeName = kerasVersion >= makeVersion(3, 0 ,0) ? "batch_shape" : "batch_input_shape";
+    const SimpleMap::Array* batchInputShape = getRecordEntry<SimpleMap::Array>(config, batchInputShapeName);
     const std::string dtype = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "dtype"));
     const bool sparse = getLiteral<bool>(getRecordEntry<SimpleMap::Literal>(config, "sparse"));
 
@@ -887,8 +888,9 @@ namespace NeuralNetwork
         if(layers.empty() && newLayer->type != LayerType::input)
         {
           // Add an implicit input layer before the first layer.
-          // Its dimensions are given by the batch_input_shape attribute of the first actual layer.
-          const SimpleMap::Array* batchInputShape = getRecordEntry<SimpleMap::Array>(layerConfig, "batch_input_shape");
+          // Its dimensions are given by the batch_input_shape / batch_shape attribute of the first actual layer.
+          const std::string batchInputShapeName = kerasVersion >= makeVersion(3, 0 ,0) ? "batch_shape" : "batch_input_shape";
+          const SimpleMap::Array* batchInputShape = getRecordEntry<SimpleMap::Array>(layerConfig, batchInputShapeName);
           const std::string dtype = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(layerConfig, "dtype"));
 
           if(dtype != "float32")
@@ -1154,9 +1156,9 @@ namespace NeuralNetwork
       VERIFY(H5Aclose(kerasVersionAttribute) >= 0);
     }
 
-    // Keras 1.x was very different. Keras 3.x is not existing yet.
-    if(kerasVersion < makeVersion(2, 0, 0) || kerasVersion >= makeVersion(3, 0, 0))
-      FAIL("Only Keras 2 models are supported.");
+    // Keras 1.x was very different. Keras 4.x does not exist yet.
+    if(kerasVersion < makeVersion(2, 0, 0) || kerasVersion >= makeVersion(4, 0, 0))
+      FAIL("Only Keras 2 and 3 models are supported.");
 
     hid_t modelConfigAttribute = H5Aopen(rootGroup, "model_config", H5P_DEFAULT);
     ASSERT(modelConfigAttribute >= 0);
@@ -1178,7 +1180,7 @@ namespace NeuralNetwork
     hid_t modelWeightsGroup = H5Gopen2(rootGroup, "model_weights", H5P_DEFAULT);
     ASSERT(modelWeightsGroup >= 0);
 
-    auto getWeights = [modelWeightsGroup, floatDatatype](const std::string& layerName, const std::string& weightName, std::vector<float>& weights, std::vector<unsigned int>& shape)
+    auto getWeights = [modelWeightsGroup, floatDatatype, kerasVersion](const std::string& layerName, const std::string& weightName, std::vector<float>& weights, std::vector<unsigned int>& shape)
     {
       hid_t layerGroup = H5Gopen2(modelWeightsGroup, layerName.c_str(), H5P_DEFAULT);
       ASSERT(layerGroup >= 0);
@@ -1263,7 +1265,7 @@ namespace NeuralNetwork
       // Reset the old error handler
       H5Eset_auto2(H5E_DEFAULT, oldFunc, oldClientData);
 
-      const std::string mangledWeightName = weightName + ":0"; // TODO: Is this always :0? We will see.
+      const std::string mangledWeightName = kerasVersion >= makeVersion(3, 0, 0) ? weightName : weightName + ":0";
       hid_t weightsDataset = H5Dopen2(weightsGroup == H5I_INVALID_HID ? layerGroup : weightsGroup, mangledWeightName.c_str(), H5P_DEFAULT);
       ASSERT(weightsDataset >= 0);
       hid_t weightsDatasetDataspace = H5Dget_space(weightsDataset);

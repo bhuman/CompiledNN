@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <vector>
 #include "../CompiledNNImplBase.h"
 
 namespace NeuralNetwork
@@ -37,6 +38,12 @@ namespace NeuralNetwork
             inputDimensions[1]
           }};
       }
+
+    private:
+      int copyLoopPacked(x86::Assembler& a, const int size, const int numRegs, const bool inputAligned, const bool outputAligned) const;
+      void copyLoopSingle(x86::Assembler& a, const int size) const;
+      int zeroLoopPacked(x86::Assembler& a, const int size, const int numRegs, const bool aligned, std::vector<bool>& xmmIsZero) const;
+      void zeroLoopSingle(x86::Assembler& a, const int size, std::vector<bool>& xmmIsZero) const;
     };
   }
 }

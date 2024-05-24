@@ -511,7 +511,7 @@ namespace NeuralNetwork
   std::unique_ptr<Layer> parseZeroPadding1DLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long)
   {
     const SimpleMap::Array* padding = getRecordEntry<SimpleMap::Array>(config, "padding");
-    const std::string dataFormat = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
+    const std::string dataFormat = config->find("data_format") == config->end() ? "channels_last" : getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "data_format"));
 
     if(dataFormat != "channels_last")
       FAIL("Data formats other than channels last are not supported.");

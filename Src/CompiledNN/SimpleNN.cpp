@@ -373,7 +373,7 @@ namespace NeuralNetwork
 
         std::vector<unsigned int> i(2);
 
-        for(i[0] = 0; i[0] < output.dims(1); i[0]++)
+        for(i[0] = 0; i[0] < output.dims(0); i[0]++)
         {
           if(i[0] < layer.padding[ZeroPadding1DLayer::LEFT] || output.dims(0) - i[0] <= layer.padding[ZeroPadding1DLayer::RIGHT])
           {

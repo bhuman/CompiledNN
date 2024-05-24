@@ -93,7 +93,7 @@ namespace NeuralNetwork
       ASSERT(kernelSize.size() == strides.size());
 
       std::vector<unsigned int> padding(kernelSize.size());
-      for(std::size_t i=0;i<padding.size();i++)
+      for(std::size_t i = 0; i < padding.size(); i++)
       {
         const unsigned int remainder = node.inputDimensions[0][i] % strides[i];
         padding[i] = std::max<int>(0, static_cast<int>(kernelSize[i]) - (remainder ? remainder : strides[i]));

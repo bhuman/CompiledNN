@@ -42,9 +42,14 @@ namespace NeuralNetwork
       inline std::vector<unsigned int> calcOutputDimensions(const std::vector<unsigned int>& inputDimensions) const override
       {
         ASSERT(inputDimensions.size() == 2);
-        return {{(inputDimensions[0] - (p.padding == PaddingType::valid ? p.kernelSize - 1 : 0) + p.stride - 1) / p.stride,
-                 inputDimensions[1]}};
+        return {{
+          (inputDimensions[0] - (p.padding == PaddingType::valid ? p.kernelSize - 1 : 0) + p.stride - 1) / p.stride,
+          inputDimensions[1]
+        }};
       }
+
+    private:
+      void pool(x86::Assembler& a, const unsigned int padding, const unsigned int channels, bool& helperRegInitialized) const;
     };
   }
 }

@@ -1180,7 +1180,7 @@ namespace NeuralNetwork
     hid_t modelWeightsGroup = H5Gopen2(rootGroup, "model_weights", H5P_DEFAULT);
     ASSERT(modelWeightsGroup >= 0);
 
-    auto getWeights = [modelWeightsGroup, floatDatatype, kerasVersion](const std::string& layerName, const std::string& weightName, std::vector<float>& weights, std::vector<unsigned int>& shape)
+    auto getWeights = [modelWeightsGroup, floatDatatype](const std::string& layerName, const std::string& weightName, std::vector<float>& weights, std::vector<unsigned int>& shape)
     {
       hid_t layerGroup = H5Gopen2(modelWeightsGroup, layerName.c_str(), H5P_DEFAULT);
       ASSERT(layerGroup >= 0);

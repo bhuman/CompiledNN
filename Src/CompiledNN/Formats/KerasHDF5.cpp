@@ -1185,7 +1185,7 @@ namespace NeuralNetwork
       hid_t layerGroup = H5Gopen2(modelWeightsGroup, layerName.c_str(), H5P_DEFAULT);
       ASSERT(layerGroup >= 0);
 
-      std::string mangledLayerName = layerName;
+      // std::string mangledLayerName = layerName;
       hid_t weightNamesAttribute = H5Aopen(layerGroup, "weight_names", H5P_DEFAULT);
       ASSERT(weightNamesAttribute >= 0);
 
@@ -1202,6 +1202,8 @@ namespace NeuralNetwork
       hsize_t numOfWeightNames = 0;
       VERIFY(H5Sget_simple_extent_dims(weightNamesAttributeDataspace, &numOfWeightNames, nullptr) == 1);
 
+      std::string mangledWeightLayerName;
+
       if(H5Tis_variable_str(weightNamesAttributeType) > 0)
       {
         ASSERT(H5Tget_size(weightNamesAttributeType) == sizeof(char*));
@@ -1214,12 +1216,13 @@ namespace NeuralNetwork
         for(const char* ptr : weightNamesData)
         {
           const std::string currentWeightLayerName(ptr);
-          auto posSlash = currentWeightLayerName.find('/');
-          auto posColon = currentWeightLayerName.find(':');
+          auto posSlash = currentWeightLayerName.rfind('/');
+          auto posColon = currentWeightLayerName.rfind(':');
+          posColon = posColon == std::string::npos ? currentWeightLayerName.size() : posColon;
           std::string currentWeightName = currentWeightLayerName.substr(posSlash + 1, posColon - posSlash - 1);
           if(currentWeightName == weightName)
           {
-            mangledLayerName = currentWeightLayerName.substr(0, posSlash);
+            mangledWeightLayerName = currentWeightLayerName;
             break;
           }
         }
@@ -1239,12 +1242,13 @@ namespace NeuralNetwork
         for(auto it = weightNamesData.begin(); it != weightNamesData.end(); it += weightNameLength)
         {
           const std::string currentWeightLayerName(it, it + weightNameLength);
-          auto posSlash = currentWeightLayerName.find('/');
-          auto posColon = currentWeightLayerName.find(':');
+          auto posSlash = currentWeightLayerName.rfind('/');
+          auto posColon = currentWeightLayerName.rfind(':');
+          posColon = posColon == std::string::npos ? currentWeightLayerName.size() : posColon;
           std::string currentWeightName = currentWeightLayerName.substr(posSlash + 1, posColon - posSlash - 1);
           if(currentWeightName == weightName)
           {
-            mangledLayerName = currentWeightLayerName.substr(0, posSlash);
+            mangledWeightLayerName = currentWeightLayerName;
             break;
           }
         }
@@ -1253,20 +1257,7 @@ namespace NeuralNetwork
       VERIFY(H5Tclose(weightNamesAttributeType) >= 0);
       VERIFY(H5Aclose(weightNamesAttribute) >= 0);
 
-      // The inner weights group may not exist: we disable the error handler while opening it here
-      H5E_auto2_t oldFunc;
-      void* oldClientData;
-      H5Eget_auto2(H5E_DEFAULT, &oldFunc, &oldClientData);
-      H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
-
-      // Try to open the inner weights group
-      hid_t weightsGroup = H5Gopen2(layerGroup, mangledLayerName.c_str(), H5P_DEFAULT);
-
-      // Reset the old error handler
-      H5Eset_auto2(H5E_DEFAULT, oldFunc, oldClientData);
-
-      const std::string mangledWeightName = kerasVersion >= makeVersion(3, 0, 0) ? weightName : weightName + ":0";
-      hid_t weightsDataset = H5Dopen2(weightsGroup == H5I_INVALID_HID ? layerGroup : weightsGroup, mangledWeightName.c_str(), H5P_DEFAULT);
+      hid_t weightsDataset = H5Dopen2(layerGroup, mangledWeightLayerName.c_str(), H5P_DEFAULT);
       ASSERT(weightsDataset >= 0);
       hid_t weightsDatasetDataspace = H5Dget_space(weightsDataset);
       ASSERT(weightsDatasetDataspace >= 0);
@@ -1289,10 +1280,6 @@ namespace NeuralNetwork
 
       VERIFY(H5Sclose(weightsDatasetDataspace) >= 0);
       VERIFY(H5Dclose(weightsDataset) >= 0);
-      if(weightsGroup != H5I_INVALID_HID)
-      {
-        VERIFY(H5Gclose(weightsGroup) >= 0);
-      }
       VERIFY(H5Gclose(layerGroup) >= 0);
     };
 

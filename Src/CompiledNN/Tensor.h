@@ -36,9 +36,9 @@ namespace NeuralNetwork
     {
       ASSERT(indices.size() <= dimensions.size());
 
-      unsigned int index = indices[0];
+      unsigned int index = 0;
 
-      for(unsigned int i = 1; i < dimensions.size(); i++)
+      for(unsigned int i = 0; i < dimensions.size(); i++)
         index = index * dimensions[i] + (i < indices.size() ? indices[i] : 0);
 
       return index;
@@ -72,7 +72,6 @@ namespace NeuralNetwork
 
     inline void reshape(const std::vector<unsigned int>& dimensions, const std::size_t minCapacity = 0)
     {
-      ASSERT(!dimensions.empty());
       this->dimensions = dimensions;
       const std::size_t size = std::max(minCapacity, this->size()) * sizeof(T) + alignmentShift;
       if(buffer.size() < size)
@@ -82,17 +81,6 @@ namespace NeuralNetwork
       }
     }
     template<typename... Indices> inline void reshape(const Indices... indices) { reshape({ { static_cast<unsigned int>(indices)... } }); }
-
-    inline void reshapeDim(const std::size_t dim, const unsigned int size)
-    {
-      if(dim >= dimensions.size())
-        return;
-
-      const unsigned int oldSize = dimensions[dim];
-      dimensions[dim] = size;
-      if(size > oldSize)
-        reserve(this->size());
-    }
 
     inline void reserve(const std::size_t minCapacity)
     {
@@ -213,8 +201,7 @@ namespace NeuralNetwork
 
     inline constexpr std::size_t size() const
     {
-      ASSERT(!dimensions.empty());
-      return std::accumulate(std::next(dimensions.cbegin()), dimensions.cend(), dimensions.front(), std::multiplies<>());
+      return std::accumulate(dimensions.cbegin(), dimensions.cend(), 1, std::multiplies<>());
     }
 
     inline std::size_t capacity() const

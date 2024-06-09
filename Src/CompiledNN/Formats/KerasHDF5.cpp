@@ -1209,7 +1209,6 @@ namespace NeuralNetwork
       hid_t layerGroup = H5Gopen2(modelWeightsGroup, layerName.c_str(), H5P_DEFAULT);
       ASSERT(layerGroup >= 0);
 
-      // std::string mangledLayerName = layerName;
       hid_t weightNamesAttribute = H5Aopen(layerGroup, "weight_names", H5P_DEFAULT);
       ASSERT(weightNamesAttribute >= 0);
 

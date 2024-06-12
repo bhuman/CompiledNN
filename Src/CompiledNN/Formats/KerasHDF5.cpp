@@ -957,7 +957,7 @@ namespace NeuralNetwork
     // This code is very much inspired by the original keras `Network.from_config` method:
     // https://github.com/keras-team/keras/blob/d78c982b326adeed6ac25200dc6892ff8f518ca6/keras/engine/network.py#L933
     std::unordered_map<std::string, std::unique_ptr<Layer>> createdLayers;
-    std::unordered_map<std::string, std::vector<const SimpleMap::Array*>> unprocessedNodes;
+    std::unordered_map<std::string, std::vector<const SimpleMap::Value*>> unprocessedNodes;
     // It first instantiates all layers and adds all their nodes (each layer can have multiple nodes) to the unprocessed map.
     for(const SimpleMap::Value* value : *layers)
     {
@@ -986,7 +986,7 @@ namespace NeuralNetwork
 
       // Add all inbound nodes of this layer to its unprocessed nodes array.
       for(const SimpleMap::Value* node : *getRecordEntry<SimpleMap::Array>(layer, "inbound_nodes"))
-        unprocessedNodes[name].push_back(dynamic_cast<const SimpleMap::Array*>(node));
+        unprocessedNodes[name].push_back(node);
     }
 
     // After that, all nodes are processed (i.e. linked with their predecessors).
@@ -1007,7 +1007,21 @@ namespace NeuralNetwork
         std::size_t i;
         for(i = 0; i < it->second.size(); ++i)
         {
-          const SimpleMap::Array* node = it->second[i];
+          const SimpleMap::Value* value = it->second[i];
+          const SimpleMap::Array* node;
+          if(kerasVersion >= makeVersion(3, 0, 0))
+          {
+            const SimpleMap::Record* nodeRecord = dynamic_cast<const SimpleMap::Record*>(value);
+            node = getRecordEntry<SimpleMap::Array>(nodeRecord, "args");
+            if(node != nullptr && node->size() >= 1)
+            {
+              const SimpleMap::Array* nodeArray = dynamic_cast<const SimpleMap::Array*>(getArrayEntry<SimpleMap::Value>(node, 0));
+              if(nodeArray != nullptr)
+                node = nodeArray;
+            }
+          }
+          else
+            node = dynamic_cast<const SimpleMap::Array*>(value);
           ASSERT(node);
 
           // A node in this array is represented as an array of its inputs.
@@ -1017,7 +1031,17 @@ namespace NeuralNetwork
           std::size_t j;
           for(j = 0; j < node->size(); ++j)
           {
-            const SimpleMap::Array* input = getArrayEntry<SimpleMap::Array>(node, j);
+            const SimpleMap::Value* inputValue = getArrayEntry<SimpleMap::Value>(node, j);
+            const SimpleMap::Array* input;
+            if(kerasVersion >= makeVersion(3, 0, 0))
+            {
+              const SimpleMap::Record* kerasTensor = dynamic_cast<const SimpleMap::Record*>(inputValue);
+              ASSERT(kerasTensor);
+              const SimpleMap::Array* kerasHistory = getRecordEntry<SimpleMap::Array>(getRecordEntry<SimpleMap::Record>(kerasTensor, "config"), "keras_history");
+              input = kerasHistory;
+            }
+            else
+              input = dynamic_cast<const SimpleMap::Array*>(inputValue);
             ASSERT(input);
             ASSERT(input->size() == 3 || input->size() == 4);
             const std::string inboundLayerName = getLiteral<std::string>(getArrayEntry<SimpleMap::Literal>(input, 0));

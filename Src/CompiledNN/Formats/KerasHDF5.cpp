@@ -98,7 +98,7 @@ namespace NeuralNetwork
 
   std::unique_ptr<Layer> parseInputLayer(const SimpleMap::Record* config, const KerasHDF5::GetWeights2FuncType&, unsigned long kerasVersion)
   {
-    const std::string batchInputShapeName = kerasVersion >= makeVersion(3, 0 ,0) ? "batch_shape" : "batch_input_shape";
+    const std::string batchInputShapeName = kerasVersion >= makeVersion(3, 0, 0) ? "batch_shape" : "batch_input_shape";
     const SimpleMap::Array* batchInputShape = getRecordEntry<SimpleMap::Array>(config, batchInputShapeName);
     const std::string dtype = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(config, "dtype"));
     const bool sparse = getLiteral<bool>(getRecordEntry<SimpleMap::Literal>(config, "sparse"));
@@ -889,7 +889,7 @@ namespace NeuralNetwork
         {
           // Add an implicit input layer before the first layer.
           // Its dimensions are given by the batch_input_shape / batch_shape attribute of the first actual layer.
-          const std::string batchInputShapeName = kerasVersion >= makeVersion(3, 0 ,0) ? "batch_shape" : "batch_input_shape";
+          const std::string batchInputShapeName = kerasVersion >= makeVersion(3, 0, 0) ? "batch_shape" : "batch_input_shape";
           const SimpleMap::Array* batchInputShape = getRecordEntry<SimpleMap::Array>(layerConfig, batchInputShapeName);
           const std::string dtype = getLiteral<std::string>(getRecordEntry<SimpleMap::Literal>(layerConfig, "dtype"));
 

@@ -138,7 +138,7 @@ namespace NeuralNetwork
 
         const bool inputAligned = (input.size() % 4) == 0;
         const bool outputAligned = ((input.size() + p.padding[ZeroPadding1DLayer::LEFT] * input.dims(1)) % 4) == 0;
-        int remainingSize = copyLoopPacked(a, input.size(), settings.xmmRegs(), inputAligned, outputAligned);
+        int remainingSize = copyLoopPacked(a, static_cast<int>(input.size()), settings.xmmRegs(), inputAligned, outputAligned);
         if(remainingSize > 0)
         {
           remainingSize = copyLoopPacked(a, remainingSize, remainingSize / 4, inputAligned, outputAligned);

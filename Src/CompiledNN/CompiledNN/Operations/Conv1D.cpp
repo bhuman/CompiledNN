@@ -65,7 +65,8 @@ namespace NeuralNetwork
       }
     }
 
-    void Conv1DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input, const TensorPointerXf& output) const
+    void Conv1DCompiler::compile(x86::Assembler& a, ActivationFunctionHandler&, const TensorPointerXf& input,
+                                 [[maybe_unused]] const TensorPointerXf& output) const
     {
       ASSERT(input.rank() == 2);
       ASSERT(output.rank() == 2);

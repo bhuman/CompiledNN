@@ -932,6 +932,35 @@ namespace NeuralNetwork
           }
         }
 
+        // Automatically use the quantized variant of this specific layer
+        const Conv2DCompiler* conv2dCompiler = dynamic_cast<const Conv2DCompiler*>(opCompilers[compilerOffset]);
+        if (conv2dCompiler && node->inputs.size() == 1 && locationRefCounters[node->inputs[0]] == 1 && nodeInputs[0].provider && conv2dCompiler->p.activationDesc.id == CompiledActivationFunctionId::relu && conv2dCompiler->p.postActivation.id == CompiledActivationFunctionId::linear && !conv2dCompiler->p.batchNormalization && conv2dCompiler->p.strides == std::array<uint32_t, 2>{ {4, 4} } && conv2dCompiler->p.weights->dims() == std::vector<uint32_t>{ {4, 4, 1, 8} } && std::all_of(conv2dCompiler->p.biases->begin(), conv2dCompiler->p.biases->end(), [](const float bias) {return static_cast<float>(static_cast<int16_t>(bias)) == bias; }))
+        {
+          uint8_t scale;
+          for (scale = 1; scale < 10; scale++)
+          {
+            if (std::all_of(conv2dCompiler->p.weights->begin(), conv2dCompiler->p.weights->end(), [scale](const float weight) {const float scaledWeight = weight * static_cast<float>(1 << scale); return static_cast<float>(static_cast<int8_t>(scaledWeight)) == scaledWeight; }))
+              break;
+          }
+
+          const UInt8InputCompiler* uInt8InputCompiler = dynamic_cast<const UInt8InputCompiler*>(nodeInputs[0].provider->compiler);
+          if (uInt8InputCompiler && !uInt8InputCompiler->p.batchNormalization && scale < 10)
+          {
+            --conv2dCompiler->refCount;
+            --uInt8InputCompiler->refCount;
+
+            QuantizedInputConvStrided4x4WithReLUCompiler::Parameters p{
+              .weights=conv2dCompiler->p.weights,
+              .biases=conv2dCompiler->p.biases,
+              .scale=scale,
+              .outputAsFloat=true
+            };
+            nodeInputs[0].provider->compiler = getCompiler<QuantizedInputConvStrided4x4WithReLUCompiler>(effSettings, p, compilers);
+            nodeInputs[0].provider->outputDimensions = nodeInputs[0].provider->compiler->calcOutputDimensions(nodeInputs[0].provider->inputDimensions);
+            continue;
+          }
+        }
+
         break;
       }
 

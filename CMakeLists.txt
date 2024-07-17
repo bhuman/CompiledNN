@@ -52,6 +52,8 @@ add_library(CompiledNN
     Src/CompiledNN/CompiledNN/Operations/Pooling1D.h
     Src/CompiledNN/CompiledNN/Operations/Pooling2D.cpp
     Src/CompiledNN/CompiledNN/Operations/Pooling2D.h
+    Src/CompiledNN/CompiledNN/Operations/QuantizedInputConvStrided4x4WithReLU.cpp
+    Src/CompiledNN/CompiledNN/Operations/QuantizedInputConvStrided4x4WithReLU.h
     Src/CompiledNN/CompiledNN/Operations/Softmax.cpp
     Src/CompiledNN/CompiledNN/Operations/Softmax.h
     Src/CompiledNN/CompiledNN/Operations/UInt8Input.cpp

@@ -17,6 +17,7 @@
 #include "Operations/GlobalPooling2D.h"
 #include "Operations/Pooling1D.h"
 #include "Operations/Pooling2D.h"
+#include "Operations/QuantizedInputConvStrided4x4WithReLU.h"
 #include "Operations/Softmax.h"
 #include "Operations/UInt8Input.h"
 #include "Operations/UpSampling2D.h"

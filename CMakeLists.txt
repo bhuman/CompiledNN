@@ -7,7 +7,7 @@ option(WITH_COVERAGE "Enable coverage." OFF)
 option(WITH_KERAS_HDF5 "Enable Keras HDF5 model format." ON)
 option(WITH_ONNX "Enable ONNX model format." ON)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -303,6 +303,9 @@ if(WITH_APPLICATIONS)
 
   add_executable(Check Tests/Check.cpp)
   target_link_libraries(Check PRIVATE CompiledNN)
+
+  add_executable(Compare Tests/Compare.cpp)
+  target_link_libraries(Compare PRIVATE CompiledNN)
 endif()
 
 if(WITH_TESTS)
@@ -337,6 +340,10 @@ if(WITH_APPLICATIONS)
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     )
     install(TARGETS Check
+        EXPORT CompiledNNTargets
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    )
+    install(TARGETS Compare
         EXPORT CompiledNNTargets
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     )

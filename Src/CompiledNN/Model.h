@@ -66,6 +66,7 @@ namespace NeuralNetwork
     unsigned int tensorIndex;
 
     TensorLocation(const Layer* layer, unsigned int nodeIndex, unsigned int tensorIndex) : layer(layer), nodeIndex(nodeIndex), tensorIndex(tensorIndex) {}
+    TensorLocation(const TensorLocation&) = default;
 
     bool operator==(const TensorLocation& other) const
     {

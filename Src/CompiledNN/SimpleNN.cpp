@@ -163,8 +163,8 @@ namespace NeuralNetwork
         ASSERT(input.rank() == 3);
         ASSERT(output.rank() == 3);
 
-        const unsigned int paddingTop = layer.padding == PaddingType::valid ? 0 : ((output.dims(0) - 1) * layer.strides[0] + layer.weights.dims(0) - input.dims(0)) / 2;
-        const unsigned int paddingLeft = layer.padding == PaddingType::valid ? 0 : ((output.dims(1) - 1) * layer.strides[1] + layer.weights.dims(1) - input.dims(1)) / 2;
+        const unsigned int paddingTop = layer.padding == PaddingType::valid ? 0 : std::max<int>(0, ((output.dims(0) - 1) * layer.strides[0] + layer.weights.dims(0) - input.dims(0))) / 2;
+        const unsigned int paddingLeft = layer.padding == PaddingType::valid ? 0 : std::max<int>(0, ((output.dims(1) - 1) * layer.strides[1] + layer.weights.dims(1) - input.dims(1))) / 2;
 
         unsigned int outputY = 0;
         for(int y = -static_cast<int>(paddingTop); outputY < output.dims(0); y += layer.strides[0], outputY++)

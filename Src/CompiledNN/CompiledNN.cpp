@@ -887,6 +887,7 @@ namespace NeuralNetwork
           }
         }
 
+        // TODO: This causes problems with the old PlayersDeeptector module.
         const ActivationCompiler* activationCompiler = dynamic_cast<const ActivationCompiler*>(opCompilers[compilerOffset]);
         if(activationCompiler && node->inputs.size() == 1 && locationRefCounters[node->inputs[0]] == 1 && nodeInputs[0].provider)
         {

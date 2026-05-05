@@ -1336,7 +1336,7 @@ public:
   inline explicit FuncArgsAssignment(const FuncDetail* fd = nullptr) noexcept { reset(fd); }
 
   inline FuncArgsAssignment(const FuncArgsAssignment& other) noexcept {
-    memcpy(this, &other, sizeof(*this));
+    memcpy(static_cast<void*>(this), &other, sizeof(*this));
   }
 
   inline void reset(const FuncDetail* fd = nullptr) noexcept {
